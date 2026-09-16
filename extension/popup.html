@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AnkiDSA</title><link rel="stylesheet" href="popup.css"><script type="module" src="popup.js"></script></head>
+<body>
+<header><a class="brand" href="#" id="home"><span class="mark">a.</span><span>AnkiDSA<small>KEEP WHAT YOU LEARN</small></span></a><button id="settings" class="icon" aria-label="Connection settings">⚙</button></header>
+<main>
+<div id="notice" role="status" hidden></div>
+<section id="auth" hidden>
+<p class="eyebrow">A LITTLE PRACTICE, LASTING RECALL</p><h1>Good work deserves<br>to stay with you.</h1>
+<p class="muted">Save the problems you solve. Remember the patterns that made them click.</p>
+<form id="auth-form">
+<label id="name-label" hidden>Your name<input id="name" maxlength="80" autocomplete="name"></label>
+<label>Email<input id="email" type="email" required autocomplete="email"></label>
+<label>Password<input id="password" type="password" required minlength="10" maxlength="64" autocomplete="current-password" placeholder="At least 10 characters"></label>
+<button class="primary" id="sign-in">Sign in</button>
+</form><button class="text-button" id="toggle-auth">New here? Create an account</button>
+<button class="text-button" id="forgot-password" hidden>Forgot your password?</button>
+</section>
+<section id="capture" hidden>
+<div class="account"><span id="greeting"></span><button class="text-button" id="logout">Sign out</button></div>
+<div class="metrics"><div><strong id="due">—</strong><span>ready to revisit</span></div><div><strong id="total">—</strong><span>in your collection</span></div></div>
+<div id="no-problem" hidden><p class="eyebrow">YOUR NEXT GOOD IDEA</p><h1>Solve. Save.<br>Remember.</h1><p class="muted">Open a LeetCode problem to save its approach here. Accepted submissions are captured automatically.</p><a class="secondary link" href="https://leetcode.com/problemset/" target="_blank" rel="noreferrer">Find a problem ↗</a></div>
+<form id="problem-form" hidden>
+<div class="section-heading"><p class="eyebrow">FROM YOUR LEETCODE TAB</p><span id="tracked" class="pill" hidden>Saved</span></div>
+<label class="sr-only" for="title">Problem title</label><input id="title" class="title-input" required maxlength="500">
+<div class="row"><label>Difficulty<select id="difficulty" required><option value="">Choose difficulty</option><option value="EASY">Easy</option><option value="MEDIUM">Medium</option><option value="HARD">Hard</option></select></label><label>Patterns<input id="tags" placeholder="array, hash-map" maxlength="2000"></label></div>
+<label>What clicked?<textarea id="notes" rows="4" maxlength="20000" placeholder="The key insight, the tricky edge case, or why this approach works…"></textarea></label>
+<p class="hint">A note in your own words makes the next review better.</p>
+<button id="save" class="primary">Save to my collection <span>↗</span></button>
+</form>
+<div id="pending-wrap" hidden><div class="section-heading"><p class="eyebrow">WAITING TO SYNC</p><button id="sync" class="text-button">Try now</button></div><div id="pending-list"></div></div>
+<button id="open-app" class="secondary">Open my review queue ↗</button>
+</section>
+<section id="preferences" hidden>
+<p class="eyebrow">MAKE YOURSELF AT HOME</p><h1>Your connection.</h1>
+<form id="settings-form"><label>AnkiDSA server<input id="base-url" type="url" required placeholder="http://localhost:8081"></label>
+<label>Review app<input id="app-url" type="url" required placeholder="http://localhost:3000"></label>
+<label class="check"><input id="auto-save" type="checkbox">Save accepted submissions automatically</label>
+<p class="hint">Only LeetCode problem details are saved. Your code and LeetCode credentials stay on LeetCode.</p>
+<button class="primary">Save settings</button><button id="cancel-settings" type="button" class="text-button">Back</button></form>
+</section>
+</main><footer><span class="dot"></span> A little every day.</footer>
+</body></html>

@@ -1,0 +1,24 @@
+const {chromium}=require('playwright');
+const path=require('node:path');
+(async()=>{
+ const ctx=await chromium.launchPersistentContext(path.resolve('.work/browser-inspect'),{channel:'chromium',headless:true,args:['--disable-extensions-except='+path.resolve('extension'),'--load-extension='+path.resolve('extension')],viewport:{width:1440,height:1000}});
+ let worker=ctx.serviceWorkers()[0] || await ctx.waitForEvent('serviceworker');
+ console.log('Extension loaded:',worker.url());
+ const popup=await ctx.newPage();
+ await popup.goto('chrome-extension://'+new URL(worker.url()).host+'/popup.html');
+ await popup.waitForTimeout(1500);
+ console.log('Popup:',await popup.locator('body').innerText());
+ await popup.screenshot({path:'.work/extension-login.png'});
+ const app=await ctx.newPage();
+ app.on('pageerror',e=>console.log('APP ERROR',e.message));
+ await app.goto('http://localhost:3000');
+ await app.waitForTimeout(5000);
+ await app.screenshot({path:'.work/app-login.png'});
+ const lc=await ctx.newPage();
+ await lc.goto('https://leetcode.com/problems/two-sum/description/',{timeout:60000,waitUntil:'domcontentloaded'});
+ await lc.waitForTimeout(5000);
+ console.log('LeetCode title:',await lc.title());
+ console.log('LeetCode headings:',await lc.locator('h1, [class*="text-title"], [class*="text-difficulty"]').allTextContents());
+ await lc.screenshot({path:'.work/leetcode.png'});
+ await ctx.close();
+})().catch(e=>{console.error(e);process.exit(1)});

@@ -1,0 +1,16 @@
+{
+  "name": "ankidsa",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Browser tests and local demo tooling for AnkiDSA",
+  "license": "UNLICENSED",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "test:e2e": "playwright test",
+    "demo": "node scripts/serve-demo.cjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
+  }
+}
