@@ -4,6 +4,8 @@ Web: https://ankidsa.netlify.app
 API: https://ankidsa-backend.onrender.com
 
 Both are deployed. Netlify uses the existing Free team with paid overages disabled.
+Signup remains public by request. Follow TESTING-GUIDE.md for the owner's first
+week of web, extension, and physical-phone testing with one shared account.
 Render deployed backend commit 499d3690f86f7a55c94e9416491bd6480ac7585d. Its
 /health and database-backed /ready endpoints return 200. Exact CORS origins are
 https://ankidsa.netlify.app and chrome-extension://bafnmcdkpidnpollodebmifggmmpkbje.
