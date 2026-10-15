@@ -18,13 +18,58 @@ class ApiService {
   final void Function()? onUnauthorized;
   final http.Client client;
   final String baseUrl;
+  final bool coldStart;
+  static final Map<String, DateTime> _ready = {};
+  static final Map<String, Future<void>> _waking = {};
   ApiService(
-      {this.token, this.onUnauthorized, http.Client? client, String? baseUrl})
+      {this.token,
+      this.onUnauthorized,
+      http.Client? client,
+      String? baseUrl,
+      bool? coldStart})
       : client = client ?? http.Client(),
+        coldStart = coldStart ?? AppConstants.hosted,
         baseUrl = baseUrl ?? AppConstants.baseUrl;
+
+  Future<void> _wake() async {
+    if (!coldStart ||
+        DateTime.now().difference(_ready[baseUrl] ?? DateTime(1970)).inMinutes <
+            5) {
+      return;
+    }
+    final pending = _waking[baseUrl];
+    if (pending != null) return pending;
+    final future = () async {
+      for (var attempt = 0; attempt < 3; attempt++) {
+        try {
+          final response = await client
+              .get(Uri.parse('$baseUrl/ready'))
+              .timeout(const Duration(seconds: 25));
+          if (response.statusCode == 200) {
+            _ready[baseUrl] = DateTime.now();
+            return;
+          }
+        } on TimeoutException {
+          /* A free server may still be waking. */
+        } on http.ClientException {/* Retry only this read-only probe. */}
+        if (attempt < 2) await Future<void>.delayed(const Duration(seconds: 2));
+      }
+      throw const ApiException(
+          'AnkiDSA is taking longer to wake up. Your changes have not been sent. Please retry shortly.',
+          503);
+    }();
+    _waking[baseUrl] = future;
+    try {
+      await future;
+    } finally {
+      _waking.remove(baseUrl);
+    }
+  }
+
   Future<dynamic> request(String path,
       {String method = 'GET', Map<String, dynamic>? body}) async {
     try {
+      await _wake();
       final req = http.Request(method, Uri.parse('$baseUrl$path'))
         ..headers.addAll({
           'Content-Type': 'application/json',
@@ -33,7 +78,7 @@ class ApiService {
       if (body != null) req.body = jsonEncode(body);
       final response =
           await (() async => http.Response.fromStream(await client.send(req)))()
-              .timeout(const Duration(seconds: 15));
+              .timeout(const Duration(seconds: 25));
       dynamic data;
       try {
         data = response.body.isEmpty ? null : jsonDecode(response.body);
@@ -41,6 +86,7 @@ class ApiService {
         data = null;
       }
       if (response.statusCode >= 400) {
+        if (response.statusCode >= 500) _ready.remove(baseUrl);
         if (response.statusCode == 401 && token != null) onUnauthorized?.call();
         throw ApiException(
             data is Map
@@ -53,7 +99,9 @@ class ApiService {
       }
       return data;
     } on TimeoutException {
-      throw const ApiException('The server took too long. Please try again.');
+      _ready.remove(baseUrl);
+      throw const ApiException(
+          'The response took too long. Refresh to check whether your change was saved before trying again.');
     } on http.ClientException {
       throw const ApiException(
           'Cannot reach AnkiDSA. Check your connection and try again.');

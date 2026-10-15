@@ -5,6 +5,7 @@ import '../theme.dart';
 import '../widgets/ui.dart';
 import '../widgets/problem_card.dart';
 import 'add_problem_screen.dart';
+import 'problem_detail_screen.dart';
 
 class ProblemsScreen extends StatefulWidget {
   const ProblemsScreen({super.key});
@@ -56,7 +57,7 @@ class _ProblemsScreenState extends State<ProblemsScreen> {
       const SizedBox(height: 26),
       if (store.error != null)
         ErrorBanner(message: store.error!, retry: () => store.refresh()),
-      if (store.loading && store.stats == null) const LinearProgressIndicator(),
+      if (store.loading && store.stats == null) const StudyLoading(),
       if (store.stats != null) ...[
         Row(children: [
           Expanded(
@@ -91,7 +92,7 @@ class _ProblemsScreenState extends State<ProblemsScreen> {
             onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (_) => AddProblemScreen(problem: p))))),
+                    builder: (_) => ProblemDetailScreen(problem: p))))),
       ],
     ]);
   }

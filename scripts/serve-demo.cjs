@@ -12,5 +12,11 @@ http.createServer((req,res) => {
   res.setHeader('Cache-Control','no-store');
   res.setHeader('X-Content-Type-Options','nosniff');
   res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');
+  // Exercise generated static-host headers locally when a release build is served.
+  const headers=path.join(root,'_headers');
+  if(fs.existsSync(headers)) for(const line of fs.readFileSync(headers,'utf8').split(/\r?\n/)) {
+    const match=line.match(/^  ([A-Za-z-]+): (.+)$/);
+    if(match) res.setHeader(match[1],match[2]);
+  }
   fs.createReadStream(file).on('error',()=>{res.writeHead(404);res.end();}).pipe(res);
 }).listen(3000,'127.0.0.1',()=>console.log('AnkiDSA demo: http://localhost:3000'));

@@ -23,8 +23,16 @@ dev_dependencies:
   flutter_lints: ^4.0.0
 flutter:
   uses-material-design: true
+  assets:
+    - assets/brand/ankidsa-icon.png
+    - assets/brand/ankidsa-icon-inverse.png
   fonts:
     - family: DMSans
+      fonts:
+        - asset: assets/fonts/DMSans.ttf
+    # CanvasKit requires a default family named Roboto. Use the bundled brand
+    # font for that fallback so first load never requests Google's font CDN.
+    - family: Roboto
       fonts:
         - asset: assets/fonts/DMSans.ttf
     - family: Lora

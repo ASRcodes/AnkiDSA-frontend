@@ -5,6 +5,12 @@ const path = require('node:path');
 // Run against scripts/start-demo.ps1. Its mail sender writes locally, without SMTP.
 const base = 'http://localhost:8081';
 const outbox = path.join(process.env.ANKIDSA_BACKEND || 'C:/SpringBoot/ankidsa', '.local/outbox');
+test.beforeEach(async ({page}) => {
+  if(process.env.VALIDATION_API_PROXY==='1') await page.route('https://api.validation.invalid/**',async route=>{
+    const response=await route.fetch({url:base+new URL(route.request().url()).pathname});
+    await route.fulfill({response});
+  });
+});
 
 async function typeInto(page, label, value) {
   await page.getByRole('textbox', { name: label, exact: true }).click();

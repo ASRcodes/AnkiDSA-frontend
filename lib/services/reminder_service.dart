@@ -26,6 +26,9 @@ class ReminderService extends ChangeNotifier {
   Future<void> _tasks = Future.value();
   StreamSubscription<String>? _tokens;
   StreamSubscription<void>? _opens;
+  StreamSubscription<void>? _messages;
+  final _foreground = StreamController<void>.broadcast();
+  Stream<void> get foregroundReminders => _foreground.stream;
   Timer? _retry;
   final _queueOpens = StreamController<void>.broadcast();
   Stream<void> get queueOpens => _queueOpens.stream;
@@ -167,6 +170,9 @@ class ReminderService extends ChangeNotifier {
     _opens ??= push.queueOpens.listen((_) {
       if (_session != null && enabled) _queueOpens.add(null);
     });
+    _messages ??= push.foregroundReminders.listen((_) {
+      if (_session != null && enabled) _foreground.add(null);
+    });
     _retry ??= Timer.periodic(const Duration(minutes: 2), (_) => refresh());
     final device = token ?? await push.token();
     if (device == null) {
@@ -246,6 +252,8 @@ class ReminderService extends ChangeNotifier {
     _generation++;
     _tokens?.cancel();
     _opens?.cancel();
+    _messages?.cancel();
+    _foreground.close();
     _retry?.cancel();
     _queueOpens.close();
     super.dispose();

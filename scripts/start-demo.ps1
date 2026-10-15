@@ -17,7 +17,7 @@ if ($Rebuild -or -not (Test-Path -LiteralPath $jarPath)) {
     try { & ./scripts/maven.ps1 -B package; if ($LASTEXITCODE -ne 0) { throw 'Backend build failed.' } } finally { Pop-Location }
 }
 if ($Rebuild -or -not (Test-Path build/web/main.dart.js)) {
-    & flutter.bat build web --no-wasm-dry-run --no-web-resources-cdn --dart-define=API_BASE_URL=http://localhost:8081 --dart-define=DEMO_MODE=true
+    & flutter.bat build web --no-wasm-dry-run --no-web-resources-cdn --dart-define=APP_ENV=development --dart-define=API_BASE_URL=http://localhost:8081 --dart-define=DEMO_MODE=true
     if ($LASTEXITCODE -ne 0) { throw 'Flutter build failed.' }
 }
 $runInfo = @{}

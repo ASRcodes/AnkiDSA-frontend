@@ -1,6 +1,8 @@
 # AnkiDSA
 Keep the patterns you learn.
 
+The backend is live at https://ankidsa-backend.onrender.com. The web app is live at https://ankidsa.netlify.app. See [LIVE-STATUS.md](LIVE-STATUS.md) for current verification and remaining setup, [DEPLOYMENT.md](DEPLOYMENT.md) for release instructions, and [branding/README.md](branding/README.md) for the shared logo system. Release builds require explicit HTTPS configuration; the local demo remains available below.
+
 AnkiDSA connects a Chrome extension, a Flutter review app, and a Spring Boot API. Capture a LeetCode problem, write down the insight, and revisit it on a schedule that responds to your recall.
 
 ## Run the local demo
@@ -17,7 +19,7 @@ Chrome: open **chrome://extensions**, enable **Developer mode**, choose **Load u
 
 See [DEMO.md](DEMO.md) for the recording walkthrough, [TESTING.md](TESTING.md) for verification, and [PRODUCTION.md](PRODUCTION.md) before deployment.
 
-Today's delivery is the local prototype; production setup is deferred. The runnable bundle is `.work/AnkiDSA-local-demo.zip`, including the web app, API, extension, and emulator APK. See [the package guide](docs/LOCAL_DEMO_PACKAGE.md) for extraction and launch instructions. Use `.\scripts\package-demo.ps1` to refresh it after builds.
+The separate local-demo bundle is `.work/AnkiDSA-local-demo.zip`, including the web app, API, extension, and emulator APK. It uses local services. See [the package guide](docs/LOCAL_DEMO_PACKAGE.md) for extraction and launch instructions. Use `.\scripts\package-demo.ps1` to refresh it after builds.
 
 The backend lives at `C:\SpringBoot\ankidsa`. Pass `-BackendPath` to the launcher if you move it. Java 21, Maven 3.9+, Flutter 3.38+, Node 22+, and Chrome are required. The Maven helper also recognizes the Maven bundled with IntelliJ on this machine.
 

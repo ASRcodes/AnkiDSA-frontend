@@ -1,0 +1,7 @@
+{
+  "APP_ENV": "production",
+  "API_BASE_URL": "https://ankidsa-backend.onrender.com",
+  "APP_PUBLIC_URL": "https://ankidsa.netlify.app",
+  "DEMO_MODE": "false",
+  "PUSH_NOTIFICATIONS_ENABLED": "false"
+}

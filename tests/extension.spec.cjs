@@ -11,6 +11,10 @@ async function launch(offline=false) {
   viewport:{width:1280,height:900}});
  worker=ctx.serviceWorkers()[0] || await ctx.waitForEvent('serviceworker');
  extensionId=new URL(worker.url()).host;
+ if(process.env.VALIDATION_API_PROXY==='1') await ctx.route('https://api.validation.invalid/**',async route=>{
+  const response=await route.fetch({url:base+new URL(route.request().url()).pathname});
+  await route.fulfill({response});
+ });
  await ctx.route('https://leetcode.com/graphql/',route=>route.fulfill({json:{data:{question:{title:'Two Sum',difficulty:'Easy',topicTags:[{name:'Hash Table',slug:'hash-table'}]}}}}));
  await ctx.route('https://leetcode.com/problems/two-sum/**',route=>route.fulfill({contentType:'text/html',body:
   '<!doctype html><html><body><h1>1. Two Sum</h1><div class="text-difficulty-easy">Easy</div><button id="submit">Submit</button><div id="results"></div><script>document.getElementById("submit").onclick=()=>{document.getElementById("results").innerHTML="<span data-e2e-locator=\\"submission-result\\">Pending</span>";setTimeout(()=>document.querySelector("[data-e2e-locator]").textContent="Accepted",700)}</script></body></html>'}));
@@ -64,6 +68,7 @@ test('capture without pressing submit does not log old accepted results',async()
  await another.close();
 });
 test('captured problem appears in Flutter, reviews successfully, and survives reload',async()=>{
+ test.setTimeout(120000);
  const app=await ctx.newPage();
  const errors=[];app.on('pageerror',e=>errors.push(e.message));
  await app.goto('http://localhost:3000');
@@ -90,6 +95,14 @@ test('captured problem appears in Flutter, reviews successfully, and survives re
  await expect(app.getByRole('group',{name:/A good place to pause\./})).toBeVisible();
  await app.setViewportSize({width:390,height:844});
  await app.screenshot({path:'.work/app-mobile-queue.png'});
+ await app.goto('http://localhost:3000/#/schedule');
+ await expect(app.getByRole('heading',{name:'A rhythm that lasts.',exact:true})).toBeVisible({timeout:30000});
+ await app.reload();
+ await expect(app.getByRole('heading',{name:'A rhythm that lasts.',exact:true})).toBeVisible({timeout:30000});
+ await app.screenshot({path:'.work/app-mobile-schedule.png'});
+ await app.goto('http://localhost:3000/#/settings');
+ await expect(app.getByRole('heading',{name:'A practice of your own.',exact:true})).toBeVisible({timeout:30000});
+ await app.screenshot({path:'.work/app-mobile-settings.png'});
  expect(errors).toEqual([]);
  await app.close();
 });
@@ -117,6 +130,8 @@ test('LeetCode content scripts cannot read the session token or invoke account e
 
 test('offline edits survive browser restart and sync only to their original account',async()=>{
  test.setTimeout(120000);
+ // An independent inspection session survives the extension's explicit logout.
+ const inspection=await (await fetch(base+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:'BrowserTest!2026'})})).json();
  await lc.bringToFront();
  await popup.reload();
  await expect(popup.locator('#tracked')).toBeVisible();
@@ -144,9 +159,10 @@ test('offline edits survive browser restart and sync only to their original acco
  await expect(popup.locator('#capture')).toBeVisible();
  await expect(popup.locator('#pending-wrap')).toBeHidden();
  await expect(popup.locator('#total')).toHaveText('0');
- const original=await (await fetch(base+'/api/problems',{headers:{Authorization:'Bearer '+token}})).json();
+ const original=await (await fetch(base+'/api/problems',{headers:{Authorization:'Bearer '+inspection.token}})).json();
  expect(original[0].notes).toBe('Store each complement in a hash map. One pass, O(n).');
  await popup.locator('#logout').click();
+ await expect.poll(async()=>(await fetch(base+'/api/auth/verify',{headers:{Authorization:'Bearer '+token}})).status).toBe(401);
  await popup.locator('#toggle-auth').click();
  await popup.locator('#email').fill(email);
  await popup.locator('#password').fill('BrowserTest!2026');
@@ -154,7 +170,7 @@ test('offline edits survive browser restart and sync only to their original acco
  await expect(popup.locator('#capture')).toBeVisible();
  await expect(popup.locator('#pending-wrap')).toBeHidden();
  await expect.poll(async()=>{
-  const r=await fetch(base+'/api/problems',{headers:{Authorization:'Bearer '+token}});
+  const r=await fetch(base+'/api/problems',{headers:{Authorization:'Bearer '+inspection.token}});
   return (await r.json())[0].notes;
  }).toBe('An offline note that must survive. Edited twice.');
 });

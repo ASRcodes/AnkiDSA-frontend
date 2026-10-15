@@ -196,6 +196,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                               ? 'Create my account'
                                               : 'Sign in'))),
                               const SizedBox(height: 12),
+                              if (_loading)
+                                const Padding(
+                                    padding: EdgeInsets.only(bottom: 12),
+                                    child: Text(
+                                        'Connecting to your workspace. The first visit can take about a minute.',
+                                        style: TextStyle(
+                                            color: AppColors.muted,
+                                            fontSize: 12),
+                                        textAlign: TextAlign.center)),
                               TextButton(
                                   onPressed: _loading
                                       ? null

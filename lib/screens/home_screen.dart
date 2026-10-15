@@ -13,9 +13,13 @@ import 'add_problem_screen.dart';
 import 'review_screen.dart';
 import 'problems_screen.dart';
 import 'stats_screen.dart';
+import 'schedule_screen.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final int initialIndex;
+  final ValueChanged<int>? onNavigate;
+  const HomeScreen({super.key, this.initialIndex = 0, this.onNavigate});
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -24,20 +28,44 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int _index = 0;
   Timer? _timer;
   StreamSubscription<void>? _reminderOpens;
+  StreamSubscription<void>? _foreground;
   bool _active = true;
   @override
   void initState() {
     super.initState();
+    _index = widget.initialIndex;
     WidgetsBinding.instance.addObserver(this);
     _reminderOpens = context.read<ReminderService?>()?.queueOpens.listen((_) {
       if (!mounted) return;
       Navigator.of(context).popUntil((route) => route.isFirst);
-      setState(() => _index = 0);
+      _select(0);
       context.read<StudyStore>().refresh(silent: true);
     });
-    _timer = Timer.periodic(const Duration(seconds: 20), (_) {
+    _foreground =
+        context.read<ReminderService?>()?.foregroundReminders.listen((_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text(
+              'A little practice, lasting recall. Your queue is ready.'),
+          action: SnackBarAction(
+              label: 'Open queue', onPressed: () => _select(0))));
+    });
+    _timer = Timer.periodic(const Duration(minutes: 2), (_) {
       if (_active && mounted) context.read<StudyStore>().refresh(silent: true);
     });
+  }
+
+  void _select(int index) {
+    setState(() => _index = index);
+    widget.onNavigate?.call(index);
+  }
+
+  @override
+  void didUpdateWidget(HomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialIndex != widget.initialIndex) {
+      _index = widget.initialIndex;
+    }
   }
 
   @override
@@ -53,6 +81,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void dispose() {
     _timer?.cancel();
     _reminderOpens?.cancel();
+    _foreground?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -64,9 +93,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final wide = MediaQuery.sizeOf(context).width >= 900;
     final store = context.watch<StudyStore>();
     final reminders = context.watch<ReminderService?>();
-    final content = IndexedStack(
-        index: _index,
-        children: [_queue(), const ProblemsScreen(), const StatsScreen()]);
+    final content = IndexedStack(index: _index, children: [
+      _queue(),
+      const ProblemsScreen(),
+      const StatsScreen(),
+      const ScheduleScreen(),
+      const SettingsScreen()
+    ]);
     return Scaffold(
         appBar: wide
             ? null
@@ -112,6 +145,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               store.queue.length),
                           _nav(1, 'Collection', Icons.bookmarks_outlined, null),
                           _nav(2, 'Insights', Icons.insights_outlined, null),
+                          _nav(3, 'Schedule', Icons.event_note_outlined, null),
+                          _nav(4, 'Settings', Icons.tune_outlined, null),
                           const SizedBox(height: 30),
                           SizedBox(
                               width: double.infinity,
@@ -189,7 +224,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 backgroundColor: AppColors.paper,
                 indicatorColor: AppColors.sage,
                 selectedIndex: _index,
-                onDestinationSelected: (i) => setState(() => _index = i),
+                onDestinationSelected: _select,
                 destinations: const [
                     NavigationDestination(
                         icon: Icon(Icons.inbox_outlined), label: 'Review'),
@@ -197,7 +232,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         icon: Icon(Icons.bookmarks_outlined),
                         label: 'Collection'),
                     NavigationDestination(
-                        icon: Icon(Icons.insights_outlined), label: 'Insights')
+                        icon: Icon(Icons.insights_outlined), label: 'Insights'),
+                    NavigationDestination(
+                        icon: Icon(Icons.event_note_outlined),
+                        label: 'Schedule'),
+                    NavigationDestination(
+                        icon: Icon(Icons.tune_outlined), label: 'Settings'),
                   ]));
   }
 
@@ -208,7 +248,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           borderRadius: BorderRadius.circular(9),
           child: InkWell(
               borderRadius: BorderRadius.circular(9),
-              onTap: () => setState(() => _index = index),
+              onTap: () => _select(index),
               child: Padding(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 15),
@@ -255,7 +295,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       const SizedBox(height: 30),
       if (store.error != null)
         ErrorBanner(message: store.error!, retry: () => store.refresh()),
-      if (store.loading && store.stats == null) const LinearProgressIndicator(),
+      if (store.loading && store.stats == null) const StudyLoading(),
       if (store.stats != null) ...[
         Container(
             width: double.infinity,

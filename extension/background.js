@@ -1,21 +1,47 @@
 import { canonicalProblem, serverUrl, cleanProblem } from './core.js';
 
-const defaults = { baseUrl: 'http://localhost:8081', appUrl: 'http://localhost:3000', autoSave: true };
+import { defaults } from './config.js';
 const ready = chrome.storage.local.setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' });
 let tasks = Promise.resolve();
 function serial(task) { const next = tasks.then(task); tasks = next.catch(() => {}); return next; }
-async function state() { await ready; const data = await chrome.storage.local.get(); return { ...defaults, ...data }; }
+async function state() {
+  await ready;
+  const data = await chrome.storage.local.get();
+  if (defaults.production && data.baseUrl && data.baseUrl !== defaults.baseUrl) {
+    // Keep unsynced drafts under their original account/server key.
+    await chrome.storage.local.remove('session');
+    await chrome.storage.local.set({ baseUrl: defaults.baseUrl, appUrl: defaults.appUrl });
+    delete data.session;
+    data.baseUrl = defaults.baseUrl;
+    data.appUrl = defaults.appUrl;
+  }
+  return { ...defaults, ...data };
+}
 function account(s) { return s.baseUrl + '|' + s.session?.email; }
-async function api(s, path, method = 'GET', body, authenticated = true) {
+const warmed = new Map();
+async function wake(baseUrl) {
+  if (!defaults.production || Date.now() - (warmed.get(baseUrl) || 0) < 300000) return;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const response = await fetch(baseUrl + '/ready', { credentials: 'omit', redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(25000) });
+      if (response.ok) { warmed.set(baseUrl, Date.now()); return; }
+    } catch { /* Only the readiness probe is retried. */ }
+  }
+  throw Object.assign(new Error('AnkiDSA is waking up. Please retry shortly; queued problems remain on this browser.'), { retry: true });
+}
+async function api(s, path, method = 'GET', body, authenticated = true, clearSession = true) {
+  if (defaults.production && s.baseUrl !== defaults.baseUrl) throw new Error('This release connects only to the configured AnkiDSA server.');
+  await wake(s.baseUrl);
   let res;
   try {
     res = await fetch(serverUrl(s.baseUrl) + path, { method, credentials: 'omit', redirect: 'error', cache: 'no-store',
       headers: { 'Content-Type': 'application/json', ...(authenticated && s.session?.token ? { Authorization: 'Bearer ' + s.session.token } : {}) },
-      ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(12000) });
+      ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(25000) });
   } catch { throw Object.assign(new Error('Server unavailable. Your saved problems will sync when it returns.'), { retry: true }); }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    if (res.status === 401 && authenticated) await chrome.storage.local.set({ session: { ...s.session, token: null } });
+    if (res.status >= 500) warmed.delete(s.baseUrl);
+    if (res.status === 401 && authenticated && clearSession) await chrome.storage.local.set({ session: { ...s.session, token: null } });
     throw Object.assign(new Error(data.message || 'Could not complete this request.'), { status: res.status, retry: res.status >= 500 || res.status === 429 });
   }
   return data;
@@ -86,9 +112,18 @@ async function handle(message, sender) {
       await chrome.storage.local.set({ session }); await flush(); return { ok: true };
     }
     case 'AUTH_OPTIONS': return api(s, '/api/auth/options', 'GET', undefined, false);
-    case 'LOGOUT': await chrome.storage.local.remove('session'); await chrome.action.setBadgeText({ text: '' }); return {};
+    case 'LOGOUT': {
+      // Clear local access even when the sleeping server cannot confirm revocation.
+      const pending = [...(s.pendingLogouts || []), ...(s.session?.token ? [{ baseUrl: s.baseUrl, session: s.session }] : [])];
+      await chrome.storage.local.set({ pendingLogouts: pending });
+      await chrome.storage.local.remove('session');
+      await chrome.action.setBadgeText({ text: '' });
+      await revokePending();
+      return {};
+    }
     case 'SETTINGS': {
       const baseUrl = serverUrl(message.baseUrl), appUrl = serverUrl(message.appUrl);
+      if (defaults.production && (baseUrl !== defaults.baseUrl || appUrl !== defaults.appUrl)) throw new Error('Server addresses are fixed in this release.');
       if (!await chrome.permissions.contains({ origins: [baseUrl + '/*'] })) throw new Error('Allow access to that server first.');
       await chrome.storage.local.set({ baseUrl, appUrl, autoSave: !!message.autoSave });
       if (baseUrl !== s.baseUrl) await chrome.storage.local.remove('session');
@@ -111,11 +146,19 @@ async function handle(message, sender) {
     default: throw new Error('Unsupported request.');
   }
 }
+async function revokePending() {
+  const pending = (await state()).pendingLogouts || [], remaining = [];
+  for (const item of pending) {
+    try { await api(item, '/api/auth/logout', 'POST', {}, true, false); }
+    catch (e) { if (e.status !== 401) remaining.push(item); }
+  }
+  await chrome.storage.local.set({ pendingLogouts: remaining });
+}
 chrome.runtime.onMessage.addListener((message, sender, respond) => {
   const task = message.type === 'AUTH_OPTIONS' ? handle(message, sender) : serial(() => handle(message, sender));
   task.then(data => respond({ data }), error => respond({ error: error.message }));
   return true;
 });
-chrome.alarms.onAlarm.addListener(alarm => { if (alarm.name === 'sync') serial(flush); });
+chrome.alarms.onAlarm.addListener(alarm => { if (alarm.name === 'sync') serial(async () => { await revokePending(); await flush(); }); });
 chrome.runtime.onInstalled.addListener(() => chrome.alarms.create('sync', { periodInMinutes: 1 }));
 chrome.runtime.onStartup.addListener(() => { chrome.alarms.create('sync', { periodInMinutes: 1 }); serial(flush); });

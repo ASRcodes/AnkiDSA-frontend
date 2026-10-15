@@ -1,0 +1,48 @@
+name: Deploy configured Netlify beta clients
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.5'
+          channel: stable
+          cache: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate, test and build
+        env:
+          API_BASE_URL: ${{ vars.API_PUBLIC_URL }}
+          APP_PUBLIC_URL: ${{ vars.APP_PUBLIC_URL }}
+          ANDROID_CERT_SHA256: ${{ vars.ANDROID_CERT_SHA256 }}
+        run: |
+          flutter pub get --enforce-lockfile
+          flutter analyze --no-pub
+          flutter test --no-pub
+          python3 scripts/package-extension.py --api "$API_BASE_URL" --app "$APP_PUBLIC_URL"
+          flutter build web --no-pub --no-wasm-dry-run --no-web-resources-cdn --pwa-strategy=none --dart-define=APP_ENV=production --dart-define=API_BASE_URL="$API_BASE_URL"
+          python3 scripts/prepare-web.py --api "$API_BASE_URL"
+          if [ -n "$ANDROID_CERT_SHA256" ]; then python3 scripts/android-app-links.py --sha256 "$ANDROID_CERT_SHA256"; fi
+      - name: Publish static files to Netlify
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ vars.NETLIFY_SITE_ID }}
+        run: |
+          test -n "$NETLIFY_AUTH_TOKEN" && test -n "$NETLIFY_SITE_ID"
+          npx --yes netlify-cli@27.12.1 deploy --dir=build/web --no-build --prod --message="GitHub $GITHUB_SHA"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: beta-extension
+          path: build/extension/ankidsa-extension.zip
+          retention-days: 3

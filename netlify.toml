@@ -1,0 +1,5 @@
+# Deploy the locally verified Flutter release with Netlify CLI --no-build.
+[build]
+  publish = "build/web"
+
+# scripts/prepare-web.py writes the security headers and SPA fallback into build/web.

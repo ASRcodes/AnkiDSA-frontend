@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../theme.dart';
 
@@ -14,20 +15,13 @@ class Brand extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: MediaQuery.withNoTextScaling(
                   child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Container(
-                    width: 39,
+                Image.asset(
+                    inverse
+                        ? 'assets/brand/ankidsa-icon-inverse.png'
+                        : 'assets/brand/ankidsa-icon.png',
+                    width: 43,
                     height: 43,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                        color: inverse ? AppColors.paper : AppColors.green,
-                        borderRadius: BorderRadius.circular(11)),
-                    child: Text('a.',
-                        style: TextStyle(
-                            fontFamily: 'Lora',
-                            fontSize: 29,
-                            fontStyle: FontStyle.italic,
-                            color:
-                                inverse ? AppColors.green : AppColors.paper))),
+                    filterQuality: FilterQuality.high),
                 const SizedBox(width: 12),
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text('AnkiDSA',
@@ -139,3 +133,63 @@ class ErrorBanner extends StatelessWidget {
 void showMessage(BuildContext context, String message) =>
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(message)));
+
+class StudyLoading extends StatefulWidget {
+  const StudyLoading({super.key});
+  @override
+  State<StudyLoading> createState() => _StudyLoadingState();
+}
+
+class _StudyLoadingState extends State<StudyLoading> {
+  bool _slow = false;
+  Timer? _timer;
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer(const Duration(seconds: 7), () {
+      if (mounted) setState(() => _slow = true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+      liveRegion: true,
+      label: _slow
+          ? 'Waking up AnkiDSA. This can take about a minute.'
+          : 'Loading your practice',
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const LinearProgressIndicator(minHeight: 2),
+        const SizedBox(height: 16),
+        Text(_slow ? 'Waking up your workspace…' : 'Preparing your practice…',
+            style: const TextStyle(fontWeight: FontWeight.w600)),
+        const SizedBox(height: 8),
+        Text(
+            _slow
+                ? 'The first connection can take about a minute. You can stay here while we reconnect.'
+                : 'Your collection will be here in a moment.',
+            style: const TextStyle(color: AppColors.muted, fontSize: 12)),
+        const SizedBox(height: 20),
+        for (var i = 0; i < 3; i++)
+          ExcludeSemantics(
+              child: Container(
+                  height: 76,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      border: Border.all(color: AppColors.line),
+                      borderRadius: BorderRadius.circular(10)),
+                  child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: FractionallySizedBox(
+                          widthFactor: .6 - i * .1,
+                          child:
+                              Container(height: 10, color: AppColors.sage))))),
+      ]));
+}

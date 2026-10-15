@@ -11,8 +11,9 @@ function notice(text, error = false) { $('notice').hidden = false; $('notice').t
 function view(id) { ['auth','capture','preferences'].forEach(s => $(s).hidden = s !== id); }
 async function busy(button, action) {
   button.disabled = true;
+  const slow = setTimeout(() => notice('Waking up AnkiDSA… The first connection can take about a minute.'), 7000);
   try { await action(); } catch(e) { notice(e.message, true); }
-  finally { button.disabled = false; }
+  finally { clearTimeout(slow); button.disabled = false; }
 }
 function pending() {
   $('pending-wrap').hidden = !state.pending.length;
