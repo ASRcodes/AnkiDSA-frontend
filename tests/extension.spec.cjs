@@ -1,5 +1,6 @@
 const {test,expect,chromium}=require('@playwright/test');
 const path=require('node:path');
+const {fillFlutterField}=require('./helpers/flutter.cjs');
 test.describe.configure({mode:'serial'});
 let ctx,worker,popup,lc,extensionId,email,token;
 const profile=path.resolve('.work/e2e-'+Date.now());
@@ -74,10 +75,8 @@ test('captured problem appears in Flutter, reviews successfully, and survives re
  app.on('console',message=>{if(message.type()==='error')errors.push(message.text());});
  await app.goto('http://localhost:3000');
  await app.bringToFront();
- await app.getByRole('textbox',{name:'Email',exact:true}).click();
- await app.keyboard.type(email,{delay:25});
- await app.getByRole('textbox',{name:'Password',exact:true}).click();
- await app.keyboard.type('BrowserTest!2026',{delay:25});
+ await fillFlutterField(app,'Email',email);
+ await fillFlutterField(app,'Password','BrowserTest!2026');
  const login=app.waitForResponse(response=>new URL(response.url()).pathname==='/api/auth/login');
  await app.getByRole('button',{name:'Sign in',exact:true}).click();
  expect((await login).status()).toBe(200);

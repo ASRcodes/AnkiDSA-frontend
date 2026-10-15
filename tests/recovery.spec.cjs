@@ -1,6 +1,7 @@
 const { test, expect } = require('@playwright/test');
 const fs = require('node:fs/promises');
 const path = require('node:path');
+const {fillFlutterField: typeInto}=require('./helpers/flutter.cjs');
 
 // Run against scripts/start-demo.ps1. Its mail sender writes locally, without SMTP.
 const base = 'http://localhost:8081';
@@ -11,12 +12,6 @@ test.beforeEach(async ({page}) => {
     await route.fulfill({response});
   });
 });
-
-async function typeInto(page, label, value) {
-  await page.getByRole('textbox', { name: label, exact: true }).click();
-  await page.keyboard.press('ControlOrMeta+A');
-  await page.keyboard.type(value, { delay: 15 });
-}
 
 async function resetLinkFor(email) {
   for (const file of await fs.readdir(outbox).catch(() => [])) {
