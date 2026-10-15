@@ -34,8 +34,8 @@ create their own accounts.
 
 Keep the extracted directory in place while you use the extension. On another
 computer, copy the ZIP and extract it there. This is a testing installation; it
-has not been published in the Chrome Web Store. Chrome on Android does not load
-this desktop extension; use the Android app on your phone.
+has not been published in the Chrome Web Store. For this trial, install the
+extension in desktop Chrome and use the Android app on your phone.
 
 ## Install the Android app on your phone
 

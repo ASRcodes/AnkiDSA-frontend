@@ -53,6 +53,13 @@ Disposable verification accounts were removed and original study data rechecked.
 The activity legend uses drawn color swatches, keeping its symbols within the
 bundled font coverage and avoiding external fallback-font requests.
 
+Client GitHub run 38723766919 passed on commit f374d6c: analysis, 19 Flutter tests,
+3 JavaScript tests, all 6 browser integration tests, production-validation web
+packaging, and Android debug/release compilation. Browser automation now waits
+for Flutter's native input focus and verifies entered values, fixing dropped
+characters on the clean CI runner. CI uses disposable services and signing keys;
+use the production artifacts listed below for the phone trial.
+
 ## Phone and Chrome testing
 
 Signed APK: build/app/outputs/flutter-apk/app-release.apk (50.9 MB).
