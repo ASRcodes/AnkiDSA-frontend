@@ -81,6 +81,8 @@ with zipfile.ZipFile(source_zip) as source:
     manifest['homepage_url'] = 'https://ankidsa.netlify.app'
     with zipfile.ZipFile(target_zip, 'w', zipfile.ZIP_DEFLATED) as target:
         for name in source.namelist():
+            if name == 'INSTALL.txt':
+                continue  # Manual-loading instructions belong only in the beta ZIP.
             if name == 'manifest.json':
                 target.writestr(name, json.dumps(manifest, indent=2, ensure_ascii=False))
             elif name == 'icons/128.png':

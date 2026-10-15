@@ -37,9 +37,13 @@ computer, copy the ZIP and extract it there. This is a testing installation; it
 has not been published in the Chrome Web Store. For this trial, install the
 extension in desktop Chrome and use the Android app on your phone.
 
-Store publication instructions and ready-made listing assets are available in
-`store\chrome\SUBMIT.md` and `build\chrome-web-store`. You can continue using the
-unpacked extension while the Store submission is being prepared or reviewed.
+Chrome Web Store publication is deferred by your choice. Use the manual ZIP for
+your trial and for sharing with others; it needs no Store registration or fee.
+`INSTALL.txt` inside the ZIP has portable setup and update instructions. Each
+person should create their own AnkiDSA account. No Store Item ID or backend change
+is needed for this package. Updates are manual: sync pending notes, replace the
+files in the same installed folder, click Reload on AnkiDSA at
+`chrome://extensions`, and refresh LeetCode.
 
 ## Install the Android app on your phone
 

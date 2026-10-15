@@ -21,7 +21,7 @@ def package(api, app, validation=False):
     manifest.pop('optional_host_permissions', None)
     manifest['content_security_policy']['extension_pages'] += '; connect-src ' + api + '; base-uri \'none\'; frame-ancestors \'none\''
     config = {'baseUrl': api, 'appUrl': app, 'autoSave': True, 'production': True}
-    files = ['background.js', 'core.js', 'content.js', 'popup.js', 'popup.html', 'popup.css', 'DMSans.ttf', 'Lora.ttf', 'DMSans-LICENSE.txt', 'Lora-LICENSE.txt', 'PRIVACY.md', 'icons/16.png', 'icons/32.png', 'icons/48.png', 'icons/128.png']
+    files = ['background.js', 'core.js', 'content.js', 'popup.js', 'popup.html', 'popup.css', 'DMSans.ttf', 'Lora.ttf', 'DMSans-LICENSE.txt', 'Lora-LICENSE.txt', 'PRIVACY.md', 'INSTALL.txt', 'icons/16.png', 'icons/32.png', 'icons/48.png', 'icons/128.png']
     output = root / 'build' / 'extension'
     output.mkdir(parents=True, exist_ok=True)
     target = output / ('ankidsa-validation-only.zip' if validation else 'ankidsa-extension.zip')

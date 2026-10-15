@@ -1,8 +1,11 @@
 # Submit AnkiDSA to the Chrome Web Store
 
-Status: prepared locally, not uploaded or submitted. No connected authenticated
-Google browser session was available to the assistant. Registration/payment and
-Google account sign-in must be completed by the account owner.
+Status: deferred by the owner; not uploaded or submitted. The current plan is
+personal use and sharing build/extension/ankidsa-extension.zip for manual loading.
+That ZIP includes INSTALL.txt, keeps the existing backend-compatible extension ID,
+and needs no Chrome Web Store developer account or registration fee. There is no
+pending request for a Store Item ID. The steps below are optional future reference
+if the owner later chooses Store publication.
 
 ## 1. Open or register your publisher account
 

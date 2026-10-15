@@ -1,0 +1,57 @@
+AnkiDSA - Chrome setup
+=====================
+
+This is a manual installation for desktop Chrome. You do not need a Chrome Web
+Store developer account or a registration fee. The extension is already connected
+to the live AnkiDSA service; no API keys or server configuration are needed.
+
+Install
+-------
+1. Extract all files from ankidsa-extension.zip into a permanent folder, such as
+   Documents/AnkiDSA-extension. Keep that folder in place after installation.
+2. Open Chrome and type chrome://extensions in the address bar.
+3. Turn on Developer mode at the top right.
+4. Click Load unpacked and select the extracted folder containing manifest.json.
+   Select the folder, not the ZIP file.
+5. Open Chrome's puzzle-piece Extensions menu and pin AnkiDSA.
+6. Create your own account at https://ankidsa.netlify.app, or sign in if you
+   already have one. Use that same account in the extension and Android app.
+7. Click the AnkiDSA icon and sign in, then refresh any open LeetCode problem tabs.
+
+First check
+-----------
+Open a problem on https://leetcode.com/problems/ and submit a correct solution.
+With automatic saving enabled, the Accepted result should save the problem.
+Open AnkiDSA, add your approach notes, and save. Refresh the web app to check that
+the same problem and notes appear. You can also save from the extension popup.
+
+Share with someone
+------------------
+Send the original ankidsa-extension.zip. This INSTALL.txt is included inside it.
+Each person follows these steps and creates their own account. Do not share your
+password or Chrome profile. Only people signed into your account see your study
+collection. Signup is public; no invitation is required.
+
+Update later
+------------
+Updates are manual. Let pending notes finish syncing first. Extract a new release
+over the same installed folder, replacing the old files. At chrome://extensions,
+click Reload on AnkiDSA, then refresh LeetCode. Keep the same installed extension
+and folder so its local settings and pending work remain available.
+
+If something does not work
+--------------------------
+- "Manifest missing": select the folder with manifest.json directly inside it.
+- No capture: refresh LeetCode, sign in to AnkiDSA, and check automatic saving.
+- No sync: confirm the same email is signed in on the web and extension.
+- Server waking: wait for it to finish, then retry when prompted.
+
+Password-reset email and push reminders are disabled in this beta. Save your
+password in your password manager. Use the Android app or web app on your phone;
+these extension installation steps are for a computer.
+
+Privacy: https://ankidsa.netlify.app/privacy/
+Support: https://ankidsa.netlify.app/support/
+Email: rajsinghrajput7002@gmail.com
+Chrome's installation instructions:
+https://developer.chrome.com/docs/extensions/get-started/tutorial/hello-world#load-unpacked
