@@ -73,6 +73,15 @@ URLs and no localhost permissions. Extract it and use Chrome > chrome://extensio
 > Developer mode > Load unpacked. The stable extension ID is
 bafnmcdkpidnpollodebmifggmmpkbje. It has not been published to the Chrome Web Store.
 
+A Store submission kit is prepared at build/chrome-web-store/ with a separate
+ankidsa-chrome-store.zip, required artwork, listing/privacy declarations, and
+reviewer instructions. The public privacy and support pages are live at
+https://ankidsa.netlify.app/privacy/ and https://ankidsa.netlify.app/support/.
+Publisher: Anubhav Singh; support: rajsinghrajput7002@gmail.com.
+Follow store/chrome/SUBMIT.md. Google developer registration and draft upload are
+still required. The actual Store Item ID must be added to backend CORS before
+submission; the current unpacked-beta ID must not be assumed to be the Store ID.
+
 No physical phone is connected here. Install the APK on your phone and test with
 the same account used on the web/extension. Confirm capture after an actual accepted
 LeetCode submission while signed in. Push and password-recovery email remain

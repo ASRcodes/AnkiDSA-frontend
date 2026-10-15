@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Privacy policy · AnkiDSA</title><meta name="description" content="How AnkiDSA uses and protects your study information.">
+<link rel="icon" href="/favicon.png"><style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f7f6f0;color:#234f40;font:17px/1.75 system-ui,sans-serif}
+header,main,footer{max-width:800px;margin:auto;padding:28px 24px}header{display:flex;align-items:center;gap:14px;border-bottom:1px solid #dce3d7}
+header img{width:44px;height:44px}header a{font-size:22px;font-weight:650;text-decoration:none}a{color:inherit;text-underline-offset:4px}
+main{padding-top:42px}h1{font:500 clamp(34px,7vw,48px)/1.2 Georgia,serif;margin:0 0 14px}h2{font-size:23px;line-height:1.35;margin:38px 0 12px}
+p{margin:0 0 18px;overflow-wrap:anywhere}.intro{font-size:19px;color:#586e60;margin-bottom:36px}footer{font-size:14px;border-top:1px solid #dce3d7;display:flex;gap:24px;flex-wrap:wrap}
+</style></head><body><header><img src="/icons/Icon-192.png" alt=""><a href="/">AnkiDSA</a></header>
+<main><h1>Privacy policy</h1><p class="intro">How AnkiDSA uses and protects your study information.</p><p>Effective date: 15 October 2026</p>
+<p>Operator: Anubhav Singh</p>
+<p>Privacy and support contact: <a href="mailto:rajsinghrajput7002@gmail.com">rajsinghrajput7002@gmail.com</a></p>
+<p>AnkiDSA helps you save LeetCode problems and personal notes for spaced reviews. This policy covers the AnkiDSA Chrome extension and the companion AnkiDSA service.</p>
+<h2>Information used</h2>
+<p>When you create an AnkiDSA account, the service receives your name, email address and password. Passwords are stored as hashes on the server. The extension uses your password for registration/sign-in and does not persist it. It keeps a session token locally so you can remain signed in.</p>
+<p>On LeetCode problem pages, the extension reads the problem title, difficulty, topic tags and canonical URL. If automatic saving is enabled, it observes a new submission and its Accepted result to decide when to capture the problem. It sends the captured metadata and the notes you choose to save to the AnkiDSA API. The companion service also stores your review ratings, dates and scheduling data.</p>
+<p>The extension does not collect solution source code, LeetCode passwords or cookies, general browsing history, or activity on unrelated websites. It does not include an advertising or analytics SDK.</p>
+<h2>Local storage and synchronization</h2>
+<p>The extension stores your AnkiDSA session, connection/automatic-saving preferences, unsynced problem notes and pending session revocations in local extension storage. Pending notes remain separated by server and account. LeetCode content scripts cannot read this storage, and the AnkiDSA session token is not given to the page.</p>
+<p>Signing out removes active local access. If the server cannot be reached, a copy of the token remains in a local retry queue solely to complete revocation, until revocation succeeds or the server rejects the expired token. Unsynced notes can remain after sign-out so they are not lost; remove them in the extension&#x27;s pending items controls or uninstall the extension to clear its local data.</p>
+<h2>How information is used and shared</h2>
+<p>Information is used to operate accounts, save and synchronize study material, schedule reviews, show study progress and protect the service. It is not sold or used for advertising, unrelated tracking, or credit/lending decisions.</p>
+<p>The service uses Render for its API, Supabase for its database, and Netlify for its web app. These providers process information needed to run those services, including technical requests and potentially IP addresses in operational logs. Problem metadata requests also reach LeetCode from the open LeetCode page; those requests are subject to LeetCode&#x27;s own policies. AnkiDSA is independent of LeetCode.</p>
+<p>Release builds communicate with the fixed AnkiDSA API over HTTPS. This policy does not promise that data transmission or storage can be completely risk-free.</p>
+<h2>Retention and deletion</h2>
+<p>Account and study records are retained while you use the service, until you delete the relevant problem or request account deletion. Deleting a problem through the app removes its notes and associated review history from the active database. Uninstalling the extension clears local extension data but does not delete the server account or already synchronized study records.</p>
+<p>For account deletion or other privacy requests, contact the operator above from your account email. The current beta has no self-service account-deletion screen. Operational logs and backup copies may outlive the active records until removed or rotated. Backups are managed manually during the beta; contact the operator for information about remaining backup copies when making a deletion request.</p>
+<h2>Your controls and updates</h2>
+<p>You can disable automatic capture, choose which notes to save, edit/delete saved problems, discard pending notes, sign out, or uninstall the extension. Password- reset email and push reminders are disabled in the current beta.</p>
+<p>Updates to this policy will appear on the public privacy page with a revised effective date. Contact the operator using the address above with privacy questions.</p></main>
+<footer><a href="/">Open AnkiDSA</a><a href="/privacy/">Privacy policy</a><a href="/support/">Support</a></footer></body></html>

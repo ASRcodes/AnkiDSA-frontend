@@ -37,6 +37,10 @@ computer, copy the ZIP and extract it there. This is a testing installation; it
 has not been published in the Chrome Web Store. For this trial, install the
 extension in desktop Chrome and use the Android app on your phone.
 
+Store publication instructions and ready-made listing assets are available in
+`store\chrome\SUBMIT.md` and `build\chrome-web-store`. You can continue using the
+unpacked extension while the Store submission is being prepared or reviewed.
+
 ## Install the Android app on your phone
 
 1. Transfer `build\app\outputs\flutter-apk\app-release.apk` to your phone by
