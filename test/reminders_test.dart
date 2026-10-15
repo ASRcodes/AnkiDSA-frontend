@@ -49,6 +49,7 @@ void main() {
   late ReminderService reminders;
   late AuthService auth;
   late List<http.Request> requests;
+  bool dailyReminders = true;
   Future<void> Function(http.Request)? intercept;
 
   setUp(() {
@@ -56,6 +57,7 @@ void main() {
     push = FakePush();
     requests = [];
     intercept = null;
+    dailyReminders = true;
     auth = AuthService()
       ..token = 'session-one'
       ..userId = 1;
@@ -67,7 +69,8 @@ void main() {
                 requests.add(request);
                 await intercept?.call(request);
                 if (request.url.path == '/api/auth/options') {
-                  return http.Response('{"dailyReminders":true}', 200);
+                  return http.Response(
+                      jsonEncode({'dailyReminders': dailyReminders}), 200);
                 }
                 return http.Response('', 204);
               }),
@@ -89,6 +92,43 @@ void main() {
     expect(reminders.enabled, false);
     expect(reminders.error, contains('blocked'));
     expect(requests.where((r) => r.method == 'PUT'), isEmpty);
+  });
+
+  test(
+      'reopening after an unavailable server retries setup without signing out',
+      () async {
+    intercept = (request) async {
+      if (request.url.path == '/api/auth/options') {
+        throw const ApiException('Server is waking.', 503);
+      }
+    };
+    reminders.attach(auth);
+    await reminders.settled;
+    expect(reminders.available, false);
+    expect(reminders.error, isNotNull);
+    intercept = null;
+    await reminders.refresh();
+    expect(reminders.available, true);
+    expect(reminders.error, isNull);
+    expect(reminders.enabled, false);
+    expect(push.prompts, 0);
+    await reminders.setEnabled(true);
+    expect(requests.last.method, 'PUT');
+    expect(jsonDecode(requests.last.body)['token'], 'phone-one');
+  });
+
+  test('backend activation becomes available without changing account consent',
+      () async {
+    dailyReminders = false;
+    reminders.attach(auth);
+    await reminders.settled;
+    expect(reminders.available, false);
+    dailyReminders = true;
+    await reminders.refresh();
+    expect(reminders.available, true);
+    expect(reminders.enabled, false);
+    expect(push.prompts, 0);
+    expect(requests.where((request) => request.method == 'PUT'), isEmpty);
   });
 
   test('token changes register the new token and remove only the previous one',

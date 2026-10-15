@@ -16,10 +16,10 @@ Future<void> showReminderSettings(BuildContext context) =>
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('A little nudge.', style: editorial(30)),
+                Text('Your daily review reminder.', style: editorial(30)),
                 const SizedBox(height: 12),
                 const Text(
-                    'Once a day, when you have problems due. Your notes and problem details stay in the app.'),
+                    'Get a morning reminder when questions are due. Tap it to see exactly which questions to revisit today. Your notes stay in the app.'),
                 const SizedBox(height: 20),
                 SwitchListTile.adaptive(
                   contentPadding: EdgeInsets.zero,

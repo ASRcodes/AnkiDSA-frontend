@@ -72,35 +72,40 @@ class ReminderService extends ChangeNotifier {
         // Logout still clears the session. Push payloads contain no account data.
       }
       if (!_current(generation) || session == null || userId == null) return;
-      final api = apiFactory(session);
-      try {
-        final options = await api.request('/api/auth/options');
-        if (!_current(generation)) return;
-        available = options['dailyReminders'] == true;
-        final prefs = await preferences();
-        if (!_current(generation)) return;
-        enabled = prefs.getBool(_preferenceKey(userId)) ?? false;
-        if (available && enabled) {
-          await _sync(generation, session);
-        } else {
-          final oldDevice = prefs.getString(_deviceKey);
-          if (oldDevice != null) {
-            try {
-              await _remove(session, oldDevice);
-            } finally {
-              await _revoke(prefs);
-            }
+      await _loadSettings(generation, session, userId);
+    }));
+  }
+
+  Future<void> _loadSettings(int generation, String session, int userId) async {
+    final api = apiFactory(session);
+    try {
+      final options = await api.request('/api/auth/options');
+      if (!_current(generation)) return;
+      available = options['dailyReminders'] == true;
+      final prefs = await preferences();
+      if (!_current(generation)) return;
+      enabled = prefs.getBool(_preferenceKey(userId)) ?? false;
+      error = null;
+      if (available && enabled) {
+        await _sync(generation, session);
+      } else {
+        final oldDevice = prefs.getString(_deviceKey);
+        if (oldDevice != null) {
+          try {
+            await _remove(session, oldDevice);
+          } finally {
+            await _revoke(prefs);
           }
         }
-      } catch (_) {
-        if (_current(generation)) {
-          error = 'Reminders could not connect. Try again when you are online.';
-        }
-      } finally {
-        api.dispose();
-        if (_current(generation)) _changed();
       }
-    }));
+    } catch (_) {
+      if (_current(generation)) {
+        error = 'Reminders could not connect. Try again when you are online.';
+      }
+    } finally {
+      api.dispose();
+      if (_current(generation)) _changed();
+    }
   }
 
   Future<void> setEnabled(bool value) {
@@ -220,10 +225,11 @@ class ReminderService extends ChangeNotifier {
   }
 
   Future<void> refresh({String? token}) {
-    final session = _session, generation = _generation;
-    if (!available ||
-        !enabled ||
+    final session = _session, generation = _generation, userId = _userId;
+    if (!push.configured ||
         session == null ||
+        userId == null ||
+        (available && !enabled) ||
         _refreshQueued ||
         _disposed) {
       return Future.value();
@@ -231,7 +237,12 @@ class ReminderService extends ChangeNotifier {
     _refreshQueued = true;
     return _enqueue(() async {
       try {
-        await _sync(generation, session, token: token);
+        if (!_current(generation)) return;
+        if (!available) {
+          await _loadSettings(generation, session, userId);
+        } else {
+          await _sync(generation, session, token: token);
+        }
       } catch (_) {
         if (_current(generation)) {
           error = 'Reminders could not connect. We will retry shortly.';

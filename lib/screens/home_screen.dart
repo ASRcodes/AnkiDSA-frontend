@@ -36,23 +36,26 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _index = widget.initialIndex;
     WidgetsBinding.instance.addObserver(this);
     _reminderOpens = context.read<ReminderService?>()?.queueOpens.listen((_) {
-      if (!mounted) return;
-      Navigator.of(context).popUntil((route) => route.isFirst);
-      _select(0);
-      context.read<StudyStore>().refresh(silent: true);
+      _openReviewQueue();
     });
     _foreground =
         context.read<ReminderService?>()?.foregroundReminders.listen((_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Text(
-              'A little practice, lasting recall. Your queue is ready.'),
+          content: const Text('Your questions for today are ready to review.'),
           action: SnackBarAction(
-              label: 'Open queue', onPressed: () => _select(0))));
+              label: 'See questions', onPressed: _openReviewQueue)));
     });
     _timer = Timer.periodic(const Duration(minutes: 2), (_) {
       if (_active && mounted) context.read<StudyStore>().refresh(silent: true);
     });
+  }
+
+  void _openReviewQueue() {
+    if (!mounted) return;
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    _select(0);
+    context.read<StudyStore>().refresh(silent: true);
   }
 
   void _select(int index) {
