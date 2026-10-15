@@ -71,13 +71,16 @@ test('captured problem appears in Flutter, reviews successfully, and survives re
  test.setTimeout(120000);
  const app=await ctx.newPage();
  const errors=[];app.on('pageerror',e=>errors.push(e.message));
+ app.on('console',message=>{if(message.type()==='error')errors.push(message.text());});
  await app.goto('http://localhost:3000');
  await app.bringToFront();
  await app.getByRole('textbox',{name:'Email',exact:true}).click();
  await app.keyboard.type(email,{delay:25});
  await app.getByRole('textbox',{name:'Password',exact:true}).click();
  await app.keyboard.type('BrowserTest!2026',{delay:25});
+ const login=app.waitForResponse(response=>new URL(response.url()).pathname==='/api/auth/login');
  await app.getByRole('button',{name:'Sign in',exact:true}).click();
+ expect((await login).status()).toBe(200);
  await expect(app.getByRole('button',{name:'Begin a review',exact:true})).toBeVisible({timeout:45000});
  await app.screenshot({path:'.work/app-captured-queue.png'});
  await app.getByRole('button',{name:'Begin a review',exact:true}).click();

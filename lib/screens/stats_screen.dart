@@ -109,9 +109,29 @@ class StatsScreen extends StatelessWidget {
                             }))));
               }),
               const SizedBox(height: 12),
-              const Text('LESS  ░  ▒  ▓  MORE',
-                  style: TextStyle(
-                      fontSize: 9, letterSpacing: 1.4, color: AppColors.muted)),
+              Semantics(
+                  label: 'Review activity from less to more',
+                  child: ExcludeSemantics(
+                      child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    const Text('LESS',
+                        style: TextStyle(fontSize: 9, color: AppColors.muted)),
+                    for (final color in const [
+                      Color(0xFFF0F1E9),
+                      Color(0xFFBFCEAE),
+                      Color(0xFF799B70),
+                      AppColors.green
+                    ])
+                      Container(
+                          width: 10,
+                          height: 10,
+                          margin: const EdgeInsets.only(left: 6),
+                          decoration: BoxDecoration(
+                              color: color,
+                              borderRadius: BorderRadius.circular(2))),
+                    const SizedBox(width: 6),
+                    const Text('MORE',
+                        style: TextStyle(fontSize: 9, color: AppColors.muted)),
+                  ]))),
             ])),
         const SizedBox(height: 32),
         const Eyebrow('IN YOUR COLLECTION'),

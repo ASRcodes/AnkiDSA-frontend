@@ -73,6 +73,16 @@ jobs:
           export ANDROID_KEY_ALIAS=validation
           keytool -genkeypair -keystore "$ANDROID_KEYSTORE_PATH" -storetype PKCS12 -storepass:env ANDROID_KEYSTORE_PASSWORD -keypass:env ANDROID_KEY_PASSWORD -alias validation -keyalg RSA -validity 2 -dname 'CN=CI Validation' -noprompt
           flutter build appbundle --release --no-pub --dart-define=APP_ENV=production --dart-define=API_BASE_URL=https://api.validation.invalid --dart-define=VALIDATION_ONLY=true
+      - name: Preserve browser failure diagnostics
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-failure-diagnostics
+          path: |
+            test-results
+            .work/api.log
+            .work/web.log
+          retention-days: 3
       - uses: actions/upload-artifact@v4
         if: github.event_name != 'pull_request'
         with:

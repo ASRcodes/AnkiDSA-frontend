@@ -40,13 +40,16 @@ public certificate association is served as JSON at /.well-known/assetlinks.json
 The static ZIP deployment uses an exact internal rewrite because Netlify's ZIP
 importer omitted the hidden .well-known directory.
 
-Flutter analysis and all 19 tests passed. Seven live browser checks passed:
+Flutter analysis and all 19 tests passed. Seven live browser checks passed with
+zero JavaScript or browser console errors:
 extension signup/save, Netlify login and synced queue, note reveal/review,
 scheduling/session persistence, mobile route refresh, sync back to the extension,
 and logout revocation. These checks used a deterministic LeetCode fixture while
 all app/API requests reached the live services. A separate read-only check on the
 real LeetCode Two Sum page also passed. No real code submission was automated.
 Disposable verification accounts were removed and original study data rechecked.
+The activity legend uses drawn color swatches, keeping its symbols within the
+bundled font coverage and avoiding external fallback-font requests.
 
 ## Phone and Chrome testing
 
