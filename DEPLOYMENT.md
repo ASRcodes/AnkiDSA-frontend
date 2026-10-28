@@ -1,6 +1,6 @@
 # AnkiDSA $0 beta deployment
 
-This guide deploys the existing two repositories. Frontend: `ASRcodes/AnkiDSA-frontend` (this directory). Backend: `ASRcodes/AnkiDSA-Backend` (locally `C:\SpringBoot\ankidsa`). The backend is live at https://ankidsa-backend.onrender.com and the web app at https://ankidsa.netlify.app. See [CURRENT-RELEASE.md](CURRENT-RELEASE.md) for current verification and remaining checks, and [LIVE-STATUS.md](LIVE-STATUS.md) for earlier deployment history. Web and API publication and Firebase provider configuration are verified. Physical-phone and scheduled FCM delivery, verified Brevo email delivery, and the live beta accepted-submission capture checks remain pending.
+This guide deploys the existing two repositories. Frontend: `ASRcodes/AnkiDSA-frontend` (this directory). Backend: `ASRcodes/AnkiDSA-Backend` (locally `C:\SpringBoot\ankidsa`). The backend is live at https://ankidsa-backend.onrender.com and the web app at https://ankidsa.netlify.app. See [CURRENT-RELEASE.md](CURRENT-RELEASE.md) for current verification and remaining checks, and [LIVE-STATUS.md](LIVE-STATUS.md) for earlier deployment history. Web and API publication and Firebase provider configuration are verified. Brevo recovery is enabled: one controlled live reset, session/password invalidation, token reuse prevention, and actual reset-message inbox receipt passed. Physical-phone and scheduled FCM delivery, a second actual recovery-message check, and the live beta accepted-submission capture checks remain pending.
 
 **Do not upload validation artifacts to a live beta.** They use `https://api.validation.invalid`. Rebuild with the real provider URLs. Never paste secrets into chat, issues, screenshots, commit messages, Flutter defines, or extension configuration.
 
@@ -77,10 +77,23 @@ Netlify plan checked 2026-10-15; other limits last reviewed 2026-09-24: [Render 
 
 ## 4. Brevo with no owned domain
 
+Current setup: Brevo Free, verified sender, and the restricted transactional API
+key `ankidsa-password-recovery` in private Render configuration. Recovery is enabled
+on deployment `dep-dbh5j0lg1s2s73cvhvkg`. The key expires on **28 October 2027** and
+can become inactive after **90 days without use**. Before expiry or after provider
+inactivity disables it, create a replacement with the same restricted permissions,
+update Render privately, deploy, and verify actual recovery delivery before retiring
+the old key where overlap is available. Do not put key values in source or client builds.
+
+One temporary controlled account passed the complete live recovery flow and its
+reset email was confirmed in the inbox. It was removed after the test. Direct
+provider test messages reached two inboxes, but a second actual recovery-message
+check is still required by step 5 below. No existing study-account password changed.
+
 1. **Brevo → Sign up → Free**, verify your existing mailbox, complete the requested legitimate account information, and obtain transactional sending approval. Do not add paid credits or a billing method.
 2. **Settings → Senders, Domains & Dedicated IPs → Senders → Add a sender**. Name `AnkiDSA`, email an existing mailbox you control (a free mailbox is acceptable only if Brevo approves it). Verify the code/link sent to that mailbox. `MAIL_FROM` must be the verified **bare email address**, not `Name <address>`.
 3. No DNS/domain authentication can be completed for a Gmail/Outlook domain you do not own. Brevo documents replacement of unauthenticated/free sender domains with a `brevosend.com` address; branding and inbox placement will differ. See [sender setup](https://help.brevo.com/hc/en-us/articles/208836149-Create-a-new-sender-From-name-and-From-email) and [domain behavior](https://help.brevo.com/hc/en-us/articles/35852083084178-Domain-setup-for-better-email-deliverability). This is conditional on account approval, not a promise that every account will be accepted. If sending is rejected, do not announce public password recovery or purchase a domain silently; keep the beta private until this required flow works.
-4. **Account menu → SMTP & API → API Keys → Generate a new API key**. Name it `ankidsa-beta`. Store it directly in Render as `BREVO_API_KEY`. Set `MAIL_PROVIDER=brevo`, `MAIL_FROM=verified@your-mailbox-provider`, `RECOVERY_ENABLED=true`, `MAIL_DAILY_LIMIT=250`.
+4. **Account menu → SMTP & API → API Keys → Generate a new API key**. Use a dedicated name such as `ankidsa-password-recovery` and restrict it to the required transactional-email permissions. Store it directly in Render as `BREVO_API_KEY`. Set `MAIL_PROVIDER=brevo`, `MAIL_FROM=verified@your-mailbox-provider`, `RECOVERY_ENABLED=true`, `MAIL_DAILY_LIMIT=250`.
 5. Test recovery to two real mailboxes you control, including spam folders. Check **Transactional → Logs** for accepted/delivered/bounced status. Do not copy message content or reset URLs into logs/issues. The app uses HTTPS port 443; no SMTP credentials are needed on Render Free. Use a dedicated account or reserve quota for other senders; 250 application attempts leave room under the provider's 300/day ceiling.
 6. Reset tokens are cryptographically random, stored only as SHA-256 fingerprints, expire after 30 minutes, and are single-use. Successful reset invalidates existing sessions/device registrations. The reset URL token is in the browser fragment, avoiding ordinary web access logs. Recovery replies do not reveal whether an account exists. Email delivery is asynchronous; HTTP acceptance does not prove inbox delivery. If a process stops before sending, request another link after the cooldown. No reset token is stored in a durable mail queue.
 
@@ -200,7 +213,7 @@ Before inviting real users, verify:
 - Problem create/read/edit/delete confirmation, conflicting edit, repeated review UUID, stats after reload, new detail/schedule/settings screens at phone/tablet/desktop widths and large text; keyboard focus and screen-reader labels.
 - Real backend sleep: leave it idle >15 minutes, then sign in/load/mutate. Readiness retries should explain the wait; mutating requests must not be blindly replayed after ambiguous failure. Test network errors and manual refresh to resolve saved-state uncertainty.
 - FCM opt-in/denial, token rotation, foreground banner, background/killed-app push, tap to queue, logout/re-login, invalid token removal, two phones, duplicate reminder triggers and transient FCM failure. Never expose real device tokens in bug reports.
-- Manual scheduler run in its window, database aggregate status, no unauthenticated access, delayed GHA run recovery; Firebase provider setup is configured, but actual phone and scheduled delivery still need verification. Brevo setup and real reset-email delivery remain pending.
+- Manual scheduler run in its window, database aggregate status, no unauthenticated access, delayed GHA run recovery; Firebase provider setup is configured, but actual phone and scheduled delivery still need verification. Brevo setup and one full actual reset/inbox check passed; a second actual recovery-message check remains.
 - Current real LeetCode pages, extension CSP/host permissions, private ZIP upgrade; Android release certificate/signature, ARM64 launch, app links, Android 13+ permission.
 
 Rollback order:

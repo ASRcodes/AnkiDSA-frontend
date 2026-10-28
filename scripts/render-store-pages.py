@@ -53,12 +53,17 @@ pages = {
         f'<p>Contact {escape(args.publisher)} at <a href="mailto:{escape(args.email, quote=True)}">{escape(args.email)}</a>.</p>'
         '<h2>Report a problem</h2><p>Include your device and browser or Android version, the steps you took, '
         'what you expected, and what happened. A problem URL and the approximate time can help us investigate.</p>'
-        '<p>Please do not send passwords, session tokens, hosting API keys, or payment details.</p>'
+        '<p>Please do not send passwords, reset links, session tokens, hosting API keys, or payment details.</p>'
+        '<h2>Password recovery</h2><p>Choose Forgot your password? on the sign-in screen and enter your account email. '
+        'Check your inbox and spam folder for the reset email. The link expires after 30 minutes and can be used once. '
+        'If it expires, request a new link.</p>'
+        '<p>A successful reset signs out earlier sessions and removes their notification device registrations. '
+        'Sign in again on each device and check that Daily reminders is enabled to resume Android reminders.</p>'
         '<h2>Account and privacy requests</h2><p>For account deletion, contact us from the email used for your '
         'AnkiDSA account. Deleting the browser extension does not delete your server account. You can delete '
         'individual problems and their notes through the app.</p>'
         '<h2>Current beta</h2><p>Problem capture, notes, synchronization and spaced reviews are available. '
-        'Android reminders are available in the notification-enabled APK: open the account menu, choose Reminders, turn on Daily reminders and allow Android notifications. Password-reset email is not enabled yet.</p>'),
+        'Android reminders are available in the notification-enabled APK: open the account menu, choose Reminders, turn on Daily reminders and allow Android notifications. Password recovery is available from the sign-in screen.</p>'),
 }
 for name, html in pages.items():
     output = ROOT / 'web' / name / 'index.html'

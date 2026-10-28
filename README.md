@@ -31,7 +31,7 @@ Use `.\scripts\stop-demo.ps1` to stop processes started by the launcher. Use `-R
 
 - Chrome Manifest V3 capture, metadata extraction, editable notes, accepted-submission detection, and a persistent retry queue.
 - Password-based accounts, signed sessions, account-scoped problem access, and isolated local demo data.
-- Email password recovery with expiring, single-use links and revocation of earlier sessions; live recovery remains disabled pending verified Brevo email delivery.
+- Email password recovery with expiring, single-use links and revocation of earlier sessions; live Brevo recovery is enabled, with one controlled reset flow and actual inbox receipt verified. See CURRENT-RELEASE.md for remaining checks.
 - Opt-in phone reminders, token rotation, and account-safe device registration; Firebase delivery is configured, with physical-phone receipt and scheduled delivery still awaiting verification.
 - Responsive review queue, searchable collection, editing and deletion, notes hidden during recall, and accurate review statistics.
 - Transactional scheduling with ownership checks, stale-version protection, and idempotent retries.

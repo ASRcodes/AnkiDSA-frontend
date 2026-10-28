@@ -4,14 +4,15 @@ Open the web app at https://ankidsa.netlify.app. The web app, Chrome extension,
 and Android APK all use https://ankidsa-backend.onrender.com and the same account.
 See [CURRENT-RELEASE.md](CURRENT-RELEASE.md) for the current APK, release status,
 and remaining checks. Firebase is configured for the new Android build; physical-phone
-delivery still needs verification. Password-reset email remains disabled pending
-verified Brevo setup and delivery.
+delivery still needs verification. Password-reset email is enabled through Brevo;
+one controlled live reset and its actual inbox receipt passed. A second actual
+recovery-message check remains in the release checklist.
 
 ## Set up your account once
 
 1. Open the web app and choose the account-creation option on the sign-in screen.
 2. Enter your name, your own email, and a unique password. Save the password in
-   your password manager: password-reset email is currently disabled.
+   your password manager. Use Forgot password if you need to recover an existing account.
 3. If you already created an account with that email, sign in to it instead.
 4. Use exactly that account on Chrome and your phone. Do not register a separate
    account for each device. Problems and reviews belong to the signed-in account.
@@ -24,6 +25,16 @@ The public URL does not make your study data public: the API requires your login
 Signup remains public, as you requested. You can use it alone for your trial by
 waiting until the week is over to share the link, but other visitors can still
 create their own accounts.
+
+## Recover an existing account
+
+Choose Forgot password and enter the exact email used when creating your AnkiDSA
+account. Check the inbox and spam folder for "Reset your AnkiDSA password". Links
+expire after 30 minutes and work once. After resetting, sign in again on your other
+clients and re-enable reminders if needed; earlier sessions and device registrations
+are invalidated. A generic request acknowledgement does not confirm that an account
+exists or an email arrived. Create an account first if you have never registered.
+Do not share your password or reset link when reporting a problem.
 
 ## Install the Chrome extension on your computer
 
@@ -134,6 +145,6 @@ client, then record which client has the correct value.
 Ready to expand means: real Accepted capture works, notes and reviews survive
 restarts, the same account stays consistent across clients, and no unresolved
 issue can lose or mix up study data. Complete the physical-phone and scheduled
-Firebase delivery checks and verify password-reset email before treating this
+Firebase delivery checks and the remaining second-mailbox recovery check before treating this
 release as complete. Store publication remains deferred; broader device coverage
 should be recorded separately from the devices actually tested.

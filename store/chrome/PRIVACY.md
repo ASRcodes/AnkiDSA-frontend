@@ -26,6 +26,19 @@ The extension does not collect solution source code, LeetCode passwords or cooki
 general browsing history, or activity on unrelated websites. It does not include
 an advertising or analytics SDK.
 
+## Password recovery email
+
+When you request password recovery, AnkiDSA uses Brevo to send email to your
+account address. Brevo processes the recipient email address, message content
+(including the reset link or password-change confirmation), and delivery events
+needed to send these messages and investigate delivery problems. Passwords are
+not included in these emails or sent to Brevo.
+
+Reset links expire after 30 minutes and can be used once. AnkiDSA stores a hash
+of each reset token. A successful reset invalidates earlier sessions and removes
+their notification device registrations. Sign in again on each device and check
+that Daily reminders is enabled if you want to resume Android reminders.
+
 ## Optional Android reminders
 
 If you enable Daily reminders in the Android app, Google Firebase Cloud Messaging
@@ -87,8 +100,8 @@ for information about remaining backup copies when making a deletion request.
 
 You can disable automatic capture, choose which notes to save, edit/delete saved
 problems, discard pending notes, sign out, or uninstall the extension. Android
-reminders are opt-in and require the current notification-enabled APK. Password-
-reset email remains disabled pending email-provider setup.
+reminders are opt-in and require the current notification-enabled APK. You can
+request a password-reset link using Forgot your password? on the sign-in screen.
 
 Updates to this policy will appear on the public privacy page with a revised
 effective date. Contact the operator using the address above with privacy questions.
