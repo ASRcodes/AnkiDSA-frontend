@@ -36,3 +36,24 @@ Remaining release checks: install the new FCM APK on a physical Android phone,
 enable reminders, verify a targeted delivery/tap, and verify a scheduled morning
 delivery. Password-recovery email still needs the planned verified email-provider
 setup. Store publication remains deferred as previously planned.
+
+## Additional server startup check
+
+A read-only live call through the actual Flutter ApiService completed readiness
+and auth-options loading in 177.8 seconds. Render's initialization log reported
+146.299 seconds for Spring and 158.734 seconds of process time. This test exercised
+the preceding server revision and did not create accounts or mutate study data.
+
+Backend revision `0b6ed1d` removes one unnecessary BCrypt computation during
+class initialization. Unknown/passwordless accounts still perform a valid cost-12
+password check and receive the existing 401 response. Eighteen targeted tests and
+full backend CI 40757324830 passed. No measured startup reduction is claimed for
+this small optimization.
+
+An isolated six-launch Java compiler benchmark did not support changing the JVM
+compiler setting: median readiness was 29.70 seconds with the default and 39.05
+seconds with C1-only compilation, with high variance; C1 warm BCrypt login was
+about 19% slower. Production retains the existing compiler and memory settings.
+
+Latest server deployment: `dep-dbh540nlk1mc73f8vj70`, live with health/readiness 200
+and daily reminders enabled. Password recovery remains disabled pending Brevo.

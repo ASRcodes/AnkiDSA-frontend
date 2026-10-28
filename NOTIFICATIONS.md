@@ -14,7 +14,7 @@ and to Cloud Logging, FCM Registration, Firebase Installations, and Firebase
 Management APIs. Phone registration after these restrictions still needs verification.
 
 A validation-only FCM request passed without sending a real notification.
-The Render deployment `dep-dbh4glec6qcc73cib380` is live with notifications enabled;
+The Render deployment `dep-dbh540nlk1mc73f8vj70` is live with notifications enabled;
 health and database readiness return 200, auth options report dailyReminders=true,
 and an unauthenticated reminder trigger is rejected with 401.
 

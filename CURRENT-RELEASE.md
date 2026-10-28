@@ -22,7 +22,7 @@ API: https://ankidsa-backend.onrender.com
 
 ## Live verification
 
-Render deployment `dep-dbh4glec6qcc73cib380` is live. Health and database readiness
+Render deployment `dep-dbh540nlk1mc73f8vj70` is live at backend revision `0b6ed1d6d3e028ce66060e3f39d7a840861d1cd2`. Health and database readiness
 return 200; dailyReminders=true; an unauthenticated trigger is rejected with 401.
 The authenticated trigger returns outside_window at this time of night, without
 sending a notification. GitHub repository REMINDERS_ENABLED=true is verified.
@@ -43,7 +43,17 @@ passed for `bc06712a311efa54f36325a7e6e086dd5f525698`: analysis, 26 Flutter test
 3 JavaScript tests, web build, all six browser flows, and Android debug/release
 compilation. Four Firebase configuration tests also passed locally. Backend CI
 [40752429357](https://github.com/ASRcodes/AnkiDSA-Backend/actions/runs/40752429357)
-passed for the scheduler fix `6e60f84`, including five scheduler tests.
+passed for the scheduler fix `6e60f84`, including five scheduler tests. The subsequent backend startup change
+`0b6ed1d` passed full CI [40757324830](https://github.com/ASRcodes/AnkiDSA-Backend/actions/runs/40757324830),
+including PostgreSQL, production TLS, and Docker startup checks. It replaces
+startup-time BCrypt dummy-hash generation with a precomputed cost-12 value while
+preserving the per-login password check for unknown accounts.
+
+A read-only live probe through the actual Flutter ApiService succeeded after
+177.8 seconds on the preceding server revision; the following auth-options call
+took about one second. Render logs attributed 146.3 seconds to Spring startup.
+This proves the longer retry path works against the hosted server, not a full
+sign-in/mutation acceptance test or a measured speedup from the small server change.
 
 ## Remaining owner and release checks
 
