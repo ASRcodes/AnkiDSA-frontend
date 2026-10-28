@@ -1,7 +1,9 @@
 # AnkiDSA
 Keep the patterns you learn.
 
-The backend is live at https://ankidsa-backend.onrender.com. The web app is live at https://ankidsa.netlify.app. See [LIVE-STATUS.md](LIVE-STATUS.md) for current verification and remaining setup, [DEPLOYMENT.md](DEPLOYMENT.md) for release instructions, and [branding/README.md](branding/README.md) for the shared logo system. Release builds require explicit HTTPS configuration; the local demo remains available below.
+See [CURRENT-RELEASE.md](CURRENT-RELEASE.md) for the 29 October startup and Firebase notification release, artifacts, and remaining verification.
+
+The backend is live at https://ankidsa-backend.onrender.com. The web app is live at https://ankidsa.netlify.app. See [CURRENT-RELEASE.md](CURRENT-RELEASE.md) for current verification and remaining setup, [LIVE-STATUS.md](LIVE-STATUS.md) for earlier deployment history, [DEPLOYMENT.md](DEPLOYMENT.md) for release instructions, and [branding/README.md](branding/README.md) for the shared logo system. Release builds require explicit HTTPS configuration; the local demo remains available below.
 
 AnkiDSA connects a Chrome extension, a Flutter review app, and a Spring Boot API. Capture a LeetCode problem, write down the insight, and revisit it on a schedule that responds to your recall.
 
@@ -17,7 +19,7 @@ Open **http://localhost:3000**. Sign in with **demo@ankidsa.local / DemoRecall!2
 
 Chrome: open **chrome://extensions**, enable **Developer mode**, choose **Load unpacked**, and select this project's **extension** folder. Pin AnkiDSA and sign in with the same account.
 
-See [DEMO.md](DEMO.md) for the recording walkthrough, [TESTING.md](TESTING.md) for verification, and [PRODUCTION.md](PRODUCTION.md) before deployment.
+See [DEMO.md](DEMO.md) for the recording walkthrough, [TESTING.md](TESTING.md) for verification, and [DEPLOYMENT.md](DEPLOYMENT.md) before deployment.
 
 The separate local-demo bundle is `.work/AnkiDSA-local-demo.zip`, including the web app, API, extension, and emulator APK. It uses local services. See [the package guide](docs/LOCAL_DEMO_PACKAGE.md) for extraction and launch instructions. Use `.\scripts\package-demo.ps1` to refresh it after builds.
 
@@ -29,8 +31,8 @@ Use `.\scripts\stop-demo.ps1` to stop processes started by the launcher. Use `-R
 
 - Chrome Manifest V3 capture, metadata extraction, editable notes, accepted-submission detection, and a persistent retry queue.
 - Password-based accounts, signed sessions, account-scoped problem access, and isolated local demo data.
-- Email password recovery with expiring, single-use links and revocation of earlier sessions.
-- Opt-in phone reminders, token rotation, and account-safe device registration; Firebase setup is required for delivery.
+- Email password recovery with expiring, single-use links and revocation of earlier sessions; live recovery remains disabled pending verified Brevo email delivery.
+- Opt-in phone reminders, token rotation, and account-safe device registration; Firebase delivery is configured, with physical-phone receipt and scheduled delivery still awaiting verification.
 - Responsive review queue, searchable collection, editing and deletion, notes hidden during recall, and accurate review statistics.
 - Transactional scheduling with ownership checks, stale-version protection, and idempotent retries.
 - PostgreSQL migrations, environment-based production configuration, and Android signing configuration.

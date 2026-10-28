@@ -8,6 +8,11 @@ The dedicated `ankidsa-fcm-sender` service account has only the Firebase Cloud
 Messaging API Admin project role. Its JSON key is kept in ignored local storage
 and in a Render secret file, never in the APK, extension, web build, or Git.
 
+The existing release certificate's SHA-1 and SHA-256 are registered in Firebase.
+The public Android key is restricted to `app.ankidsa.mobile` and that certificate,
+and to Cloud Logging, FCM Registration, Firebase Installations, and Firebase
+Management APIs. Phone registration after these restrictions still needs verification.
+
 A validation-only FCM request passed without sending a real notification.
 The Render deployment `dep-dbh4glec6qcc73cib380` is live with notifications enabled;
 health and database readiness return 200, auth options report dailyReminders=true,

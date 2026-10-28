@@ -23,6 +23,10 @@ credential scan found no high-confidence findings. The production web build
 completed; live index, startup script, compiled application, and Android App Links
 association matched their local SHA-256 digests. The live sign-in screen rendered.
 
+Client CI 40753563031 passed at source revision bc06712, including all six browser
+flows and Android debug/release compilation. The corrected test input helper uses
+ordinary keyboard events to keep Flutter's editing controller synchronized.
+
 Initial Netlify startup deployment: 6ae2469fb5308518dd226b48.
 Firebase-enabled Render deployment: dep-dbh4glec6qcc73cib380, live on the existing
 validated server revision c84f951ef0b0033f92c61ee74b23c776e64deb50. The scheduler-only

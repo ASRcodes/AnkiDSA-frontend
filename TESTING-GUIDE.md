@@ -2,6 +2,10 @@
 
 Open the web app at https://ankidsa.netlify.app. The web app, Chrome extension,
 and Android APK all use https://ankidsa-backend.onrender.com and the same account.
+See [CURRENT-RELEASE.md](CURRENT-RELEASE.md) for the current APK, release status,
+and remaining checks. Firebase is configured for the new Android build; physical-phone
+delivery still needs verification. Password-reset email remains disabled pending
+verified Brevo setup and delivery.
 
 ## Set up your account once
 
@@ -63,6 +67,12 @@ The APK supports Android 7.0 and later. It is signed for this beta and does not
 require a Play Store listing. No physical phone was available during automated
 verification, so this installation and device test are still required.
 
+To test the new reminders, open the account menu > Reminders, turn on Daily
+reminders, and allow Android notifications. Wait for registration to finish.
+Follow [NOTIFICATIONS.md](NOTIFICATIONS.md) to check background receipt, taps,
+scheduled delivery, opt-out, and account switching. A configured provider or a
+successful registration does not by itself prove the phone displayed a reminder.
+
 ## First complete test: computer to phone and back
 
 Use one easy problem, such as Two Sum, and perform these steps in order.
@@ -89,9 +99,11 @@ still needs your browser; automation used a controlled LeetCode test page.
 
 ## A practical seven-day trial
 
-Set a daily phone alarm for a convenient 10–15 minute session. Push reminders are
-disabled for this beta. Review what is actually due; do not change your device
-clock or force a problem to become due for a test.
+Choose a convenient 10–15 minute review session. You can enable Daily reminders
+in the new Android build; use a phone alarm as a backup while notification delivery
+is being verified. Reminders apply only when questions are due. Review what is
+actually due; do not change your device clock or force a problem to become due
+for a test.
 
 | Day | Focus |
 | --- | --- |
@@ -121,5 +133,7 @@ client, then record which client has the correct value.
 
 Ready to expand means: real Accepted capture works, notes and reviews survive
 restarts, the same account stays consistent across clients, and no unresolved
-issue can lose or mix up study data. Firebase push, password-reset email, store
-listings, and broader device coverage remain separate work after this trial.
+issue can lose or mix up study data. Complete the physical-phone and scheduled
+Firebase delivery checks and verify password-reset email before treating this
+release as complete. Store publication remains deferred; broader device coverage
+should be recorded separately from the devices actually tested.

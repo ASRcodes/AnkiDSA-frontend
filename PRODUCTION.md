@@ -1,5 +1,12 @@
 # Deploying AnkiDSA
 
+> Historical implementation notes. For current setup, migration, packaging, email,
+> and scheduler instructions, follow [DEPLOYMENT.md](DEPLOYMENT.md). See
+> [CURRENT-RELEASE.md](CURRENT-RELEASE.md) for the current artifacts, configured
+> Firebase provider, and remaining physical-phone and email verification. The
+> older procedures below are retained as history and must not be used to configure
+> or migrate the live release.
+
 The local demo is deliberately separate from production. This document covers the remaining operator configuration and the code's limits; a successful local build is not a deployment or a security audit.
 
 ## Accounts and credentials
