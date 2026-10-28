@@ -19,6 +19,7 @@ class ApiService {
   final http.Client client;
   final String baseUrl;
   final bool coldStart;
+  final Duration wakeTimeout, probeTimeout, retryDelay;
   static final Map<String, DateTime> _ready = {};
   static final Map<String, Future<void>> _waking = {};
   ApiService(
@@ -26,7 +27,10 @@ class ApiService {
       this.onUnauthorized,
       http.Client? client,
       String? baseUrl,
-      bool? coldStart})
+      bool? coldStart,
+      this.wakeTimeout = const Duration(minutes: 3),
+      this.probeTimeout = const Duration(seconds: 10),
+      this.retryDelay = const Duration(seconds: 2)})
       : client = client ?? http.Client(),
         coldStart = coldStart ?? AppConstants.hosted,
         baseUrl = baseUrl ?? AppConstants.baseUrl;
@@ -40,11 +44,13 @@ class ApiService {
     final pending = _waking[baseUrl];
     if (pending != null) return pending;
     final future = () async {
-      for (var attempt = 0; attempt < 3; attempt++) {
+      final clock = Stopwatch()..start();
+      while (clock.elapsed < wakeTimeout) {
+        final remaining = wakeTimeout - clock.elapsed;
         try {
           final response = await client
               .get(Uri.parse('$baseUrl/ready'))
-              .timeout(const Duration(seconds: 25));
+              .timeout(remaining < probeTimeout ? remaining : probeTimeout);
           if (response.statusCode == 200) {
             _ready[baseUrl] = DateTime.now();
             return;
@@ -52,7 +58,10 @@ class ApiService {
         } on TimeoutException {
           /* A free server may still be waking. */
         } on http.ClientException {/* Retry only this read-only probe. */}
-        if (attempt < 2) await Future<void>.delayed(const Duration(seconds: 2));
+        final remainingDelay = wakeTimeout - clock.elapsed;
+        if (remainingDelay <= Duration.zero) break;
+        await Future<void>.delayed(
+            remainingDelay < retryDelay ? remainingDelay : retryDelay);
       }
       throw const ApiException(
           'AnkiDSA is taking longer to wake up. Your changes have not been sent. Please retry shortly.',

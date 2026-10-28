@@ -58,7 +58,7 @@ pages = {
         'AnkiDSA account. Deleting the browser extension does not delete your server account. You can delete '
         'individual problems and their notes through the app.</p>'
         '<h2>Current beta</h2><p>Problem capture, notes, synchronization and spaced reviews are available. '
-        'Push reminders and password-reset email are not enabled yet.</p>'),
+        'Android reminders are available in the notification-enabled APK: open the account menu, choose Reminders, turn on Daily reminders and allow Android notifications. Password-reset email is not enabled yet.</p>'),
 }
 for name, html in pages.items():
     output = ROOT / 'web' / name / 'index.html'

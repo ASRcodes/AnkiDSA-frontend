@@ -21,11 +21,14 @@ function account(s) { return s.baseUrl + '|' + s.session?.email; }
 const warmed = new Map();
 async function wake(baseUrl) {
   if (!defaults.production || Date.now() - (warmed.get(baseUrl) || 0) < 300000) return;
-  for (let attempt = 0; attempt < 3; attempt++) {
+  const deadline = Date.now() + 180000;
+  while (Date.now() < deadline) {
     try {
-      const response = await fetch(baseUrl + '/ready', { credentials: 'omit', redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(25000) });
+      const response = await fetch(baseUrl + '/ready', { credentials: 'omit', redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(Math.max(1, Math.min(10000, deadline - Date.now()))) });
       if (response.ok) { warmed.set(baseUrl, Date.now()); return; }
     } catch { /* Only the readiness probe is retried. */ }
+    const remaining = deadline - Date.now();
+    if (remaining > 0) await new Promise(resolve => setTimeout(resolve, Math.min(2000, remaining)));
   }
   throw Object.assign(new Error('AnkiDSA is waking up. Please retry shortly; queued problems remain on this browser.'), { retry: true });
 }

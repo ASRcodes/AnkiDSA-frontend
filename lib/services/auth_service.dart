@@ -50,6 +50,11 @@ class AuthService extends ChangeNotifier {
         if (generation != _generation) return;
         final session = jsonDecode(saved) as Map<String, dynamic>;
         _assign(session);
+        // Render the local session immediately. Protected API calls still verify
+        // authorization on the server and revoke an expired session on 401.
+        isLoading = false;
+        notifyListeners();
+        if (generation != _generation) return;
         final api = _api(token, null);
         try {
           final user = await api.request('/api/auth/verify');
@@ -60,8 +65,8 @@ class AuthService extends ChangeNotifier {
         } on ApiException catch (e) {
           if (e.status == 401) {
             if (generation != _generation) return;
-            token = null;
-            await _persistSession(generation, null);
+            expire();
+            return;
           }
           // An offline start preserves the session; the collection shows a retry action.
         } finally {
@@ -73,8 +78,15 @@ class AuthService extends ChangeNotifier {
       token = null;
       startupError = 'Could not restore your session. Please sign in again.';
     }
+    if (generation != _generation) return;
     isLoading = false;
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _generation++;
+    super.dispose();
   }
 
   void _assign(Map<String, dynamic> data) {

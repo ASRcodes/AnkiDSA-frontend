@@ -161,7 +161,7 @@ class _StudyLoadingState extends State<StudyLoading> {
   Widget build(BuildContext context) => Semantics(
       liveRegion: true,
       label: _slow
-          ? 'Waking up AnkiDSA. This can take about a minute.'
+          ? 'Waking up AnkiDSA. This can take up to three minutes after inactivity.'
           : 'Loading your practice',
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const LinearProgressIndicator(minHeight: 2),
@@ -171,7 +171,7 @@ class _StudyLoadingState extends State<StudyLoading> {
         const SizedBox(height: 8),
         Text(
             _slow
-                ? 'The first connection can take about a minute. You can stay here while we reconnect.'
+                ? 'The first connection can take up to three minutes after inactivity. You can stay here while we reconnect.'
                 : 'Your collection will be here in a moment.',
             style: const TextStyle(color: AppColors.muted, fontSize: 12)),
         const SizedBox(height: 20),

@@ -200,7 +200,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 const Padding(
                                     padding: EdgeInsets.only(bottom: 12),
                                     child: Text(
-                                        'Connecting to your workspace. The first visit can take about a minute.',
+                                        'Connecting to your workspace. The first visit can take up to three minutes after inactivity.',
                                         style: TextStyle(
                                             color: AppColors.muted,
                                             fontSize: 12),

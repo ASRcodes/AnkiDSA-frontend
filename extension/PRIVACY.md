@@ -1,6 +1,6 @@
 # AnkiDSA privacy policy
 
-Effective date: 15 October 2026
+Effective date: 29 October 2026
 
 Operator: Anubhav Singh
 
@@ -25,6 +25,21 @@ The companion service also stores your review ratings, dates and scheduling data
 The extension does not collect solution source code, LeetCode passwords or cookies,
 general browsing history, or activity on unrelated websites. It does not include
 an advertising or analytics SDK.
+
+## Optional Android reminders
+
+If you enable Daily reminders in the Android app, Google Firebase Cloud Messaging
+(FCM) processes a device registration token and generic notification text to deliver
+your reminder. AnkiDSA stores the token linked to your account, your reminder
+preference, and delivery status needed to avoid duplicate daily reminders. Your
+problem notes and solution details are not included in the push message. Opening
+the notification loads your review queue from AnkiDSA after authentication.
+
+You can turn reminders off in the app or in Android notification settings. Turning
+them off in the app unregisters the device and deletes its FCM token. Signing out
+also removes the account's device registration when the backend can be reached;
+offline sign-out queues server cleanup for retry. Notification receipt depends on
+network availability and device settings. The Chrome extension does not use FCM.
 
 ## Local storage and synchronization
 
@@ -71,8 +86,9 @@ for information about remaining backup copies when making a deletion request.
 ## Your controls and updates
 
 You can disable automatic capture, choose which notes to save, edit/delete saved
-problems, discard pending notes, sign out, or uninstall the extension. Password-
-reset email and push reminders are disabled in the current beta.
+problems, discard pending notes, sign out, or uninstall the extension. Android
+reminders are opt-in and require the current notification-enabled APK. Password-
+reset email remains disabled pending email-provider setup.
 
 Updates to this policy will appear on the public privacy page with a revised
 effective date. Contact the operator using the address above with privacy questions.

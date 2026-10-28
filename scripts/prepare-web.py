@@ -12,6 +12,11 @@ args = parser.parse_args()
 api = packager.origin(args.api, args.validation_only)
 output = root / 'build/web'
 assert (output / 'main.dart.js').is_file(), 'Run flutter build web first'
+index = output / 'index.html'
+html = index.read_text(encoding='utf-8')
+html = html.replace('<!-- ANKIDSA_API_ORIGIN -->',
+                    '<meta name="ankidsa-api" content="' + api + '">')
+index.write_text(html, encoding='utf-8')
 for file in output.rglob('*'):
     if file.is_file() and file.stat().st_size > 25 * 1024 * 1024:
         raise ValueError('Asset exceeds the static hosting file-size budget: ' + file.name)

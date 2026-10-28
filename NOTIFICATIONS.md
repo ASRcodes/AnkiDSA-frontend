@@ -1,32 +1,27 @@
 # Daily review reminders
 
-Reminders are a release requirement for the owner's full-system trial. The live
-API and existing APK still have notifications disabled until Firebase setup and
-a real-phone delivery check are complete. Firebase project: `ankidsa-1b561`.
+## Provider setup completed - 29 October 2026
 
-## Connect Firebase
+Firebase project `ankidsa-1b561` belongs to the owner's `anufordevwork@gmail.com`
+account. Android app `app.ankidsa.mobile` is registered as AnkiDSA Android.
+The dedicated `ankidsa-fcm-sender` service account has only the Firebase Cloud
+Messaging API Admin project role. Its JSON key is kept in ignored local storage
+and in a Render secret file, never in the APK, extension, web build, or Git.
 
-1. In Firebase Project settings > General, register an Android app with package
-   `app.ankidsa.mobile`. Download its `google-services.json`.
-2. In Project settings > Service accounts > Firebase Admin SDK, generate a private
-   key for the project. Keep it out of chat and source control.
-3. Save both files in `C:\Users\rajsi\ankidsa\.work\firebase`, named
-   `google-services.json` and `firebase-service-account.json`.
-4. Run `python scripts/prepare-firebase.py`. It checks that both files belong to
-   the same Firebase project and selects the correct Android application. It
-   writes only public client values to ignored `config/production.local.json`.
-5. Verify FCM access with a validation-only request. Upload the Admin SDK key to
-   Render as a secret file and configure `FIREBASE_PROJECT_ID`,
-   `GOOGLE_APPLICATION_CREDENTIALS`, `REMINDER_TRIGGER_SECRET`, and
-   `NOTIFICATIONS_ENABLED=true`. Deploy the verified backend revision.
-6. Build the signed APK with `scripts/build-android-release.ps1 -ConfigFile
-   config/production.local.json -ApkOnly`. Use the existing signing key so the new
-   APK can update the previous installation.
+A validation-only FCM request passed without sending a real notification.
+The Render deployment `dep-dbh4glec6qcc73cib380` is live with notifications enabled;
+health and database readiness return 200, auth options report dailyReminders=true,
+and an unauthenticated reminder trigger is rejected with 401.
 
-The backend repository's `reminders` environment has been prepared for `main`,
-with its API URL and separate trigger secret. `REMINDERS_ENABLED` remains off
-until provider configuration passes. Do not put the Firebase Admin SDK key in
-the client configuration, extension ZIP, or any public build.
+The public client configuration is generated into `config/production.local.json`.
+Build with `scripts/build-android-release.ps1 -ConfigFile config/production.local.json
+-ApkOnly`, retaining the existing beta signing key. `scripts/prepare-firebase.py`
+checks that both downloaded files belong to this project and package.
+
+Physical-phone receipt and tap-to-queue verification remain pending. Provider
+validation is not evidence that Android displayed the notification. The owner
+will install the new signed APK manually. The GitHub scheduler's readiness wait
+now permits 180 seconds, including when Render returns immediate 503 responses.
 
 ## What the reminder does
 
