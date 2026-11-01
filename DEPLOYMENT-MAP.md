@@ -1,6 +1,6 @@
 # AnkiDSA deployment map
 
-The API is live on Render Free. The web app is live at https://ankidsa.netlify.app on the existing Netlify Free team. See LIVE-STATUS.md for current results. Use [DEPLOYMENT.md](DEPLOYMENT.md) for the complete setup and rollback procedure.
+The API is live on Render Free. The web app is live at https://ankidsa.netlify.app on the existing Netlify Free team. See [CURRENT-RELEASE.md](CURRENT-RELEASE.md) for current results and [LIVE-STATUS.md](LIVE-STATUS.md) for earlier deployment history. Use [DEPLOYMENT.md](DEPLOYMENT.md) for the complete setup and rollback procedure.
 
 | Component | Deploy here | What to upload/connect | Configuration | Final URL | Verification |
 |---|---|---|---|---|---|
@@ -9,8 +9,9 @@ The API is live on Render Free. The web app is live at https://ankidsa.netlify.a
 | PostgreSQL | Existing Supabase Free project | **No redeployment/reset**; reviewed additive migrations only after backup | JDBC session-pooler host/user/password in Render; 3 connections | Existing Supabase project/Connect host | Identity, Flyway history, unchanged study counts, blocked public table access |
 | FCM | Existing/new Firebase Spark project | Android registration + least-privilege server account key in Render | Four public Android client values; server private JSON via secret file | Firebase Console, no user-facing FCM URL | Real Android permission/token/push/tap/logout tests |
 | Email | Brevo Free | Verified sender mailbox, approved transactional account | `BREVO_API_KEY`, `MAIL_FROM`, provider `brevo`, cap 250 | Brevo Transactional Logs | Real reset email delivered; single-use token; old sessions rejected |
-| Reminder trigger | Backend GitHub Actions | `reminders.yml` and standard-library Python script | `reminders` environment: private trigger secret + public API origin | `POST https://ankidsa-backend.onrender.com/internal/reminders` | Authorized batch and DB status; unauthenticated request 401 |
-| Android | Local release / optional Firebase App Distribution | Signed APK; retain signed AAB for later | Private local signing key; public production JSON/Firebase config | Local artifacts / Firebase tester invitation | Signature, ARM64 launch, App Links and real FCM |
+| Reminder wake | Existing Supabase pg_cron + pg_net | Reviewed backend `ops/supabase-reminder-wake.sql` | Three public wake jobs plus scoped history retention; no request credentials | `GET https://ankidsa-backend.onrender.com/ready` | Ten morning pulses; real one-off cron wake passed; inspect delivery separately |
+| Reminder dispatch/audit | Backend timer + GitHub Actions audit | Automatic minute timer; `reminders.yml` and Python audit | Morning window and DB leases; private trigger secret only for operational audit/manual send | `GET /internal/reminders` audit; manual `POST` | 12:47 IST audit may be delayed; provider/phone evidence remains separate |
+| Android | Local release / optional Firebase App Distribution | Signed APK/AAB `1.0.1+2`; previous signer retained | Private local signing key; public production JSON/Firebase config | Local artifacts / Firebase tester invitation | Signature, ARM64 launch, App Links and real FCM |
 | Chrome extension | Unpacked private ZIP | `build/extension/ankidsa-extension.zip` | Generated public API/Netlify origins; no secrets | `chrome-extension://bafnmcdkpidnpollodebmifggmmpkbje/popup.html` | Actual LeetCode save, offline queue, Flutter sync |
 
 Initial mandatory cost: **$0**. Estimated monthly cost: **$0 within free quotas**. Do not add paid overages. Public store publication and custom domains are postponed. Validation artifacts using `.invalid` origins must be rebuilt before launch.

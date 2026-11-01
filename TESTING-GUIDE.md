@@ -3,10 +3,13 @@
 Open the web app at https://ankidsa.netlify.app. The web app, Chrome extension,
 and Android APK all use https://ankidsa-backend.onrender.com and the same account.
 See [CURRENT-RELEASE.md](CURRENT-RELEASE.md) for the current APK, release status,
-and remaining checks. Firebase is configured for the new Android build; physical-phone
-delivery still needs verification. Password-reset email is enabled through Brevo;
-one controlled live reset and its actual inbox receipt passed. A second actual
-recovery-message check remains in the release checklist.
+and remaining checks. Use the new signed APK **1.0.1+2** after automated and live
+service checks finish. Direct FCM receipt and queue opening passed on the owner's
+phone using the previous APK in foreground, background and swiped-away states;
+opt-out/re-enable also passed on that earlier build. Scheduled morning delivery and sign-out/account switching remain live
+checks. Password-reset email is enabled through Brevo;
+one complete controlled reset flow and actual reset-message inbox receipts for
+two mailboxes are verified. The owner's study password was not changed.
 
 ## Set up your account once
 
@@ -17,9 +20,9 @@ recovery-message check remains in the release checklist.
 4. Use exactly that account on Chrome and your phone. Do not register a separate
    account for each device. Problems and reviews belong to the signed-in account.
 
-You can be the first active tester of this release. The database already had two
-account records before this deployment; they were preserved. Automated verification
-accounts were removed. Existing IDs do not affect your ability to use the app.
+Existing accounts and study data are preserved. Use your existing account rather
+than creating duplicates. Controlled automated-verification accounts were removed
+after their checks.
 
 The public URL does not make your study data public: the API requires your login.
 Signup remains public, as you requested. You can use it alone for your trial by
@@ -62,7 +65,7 @@ files in the same installed folder, click Reload on AnkiDSA at
 
 ## Install the Android app on your phone
 
-1. Transfer `build\app\outputs\flutter-apk\app-release.apk` to your phone by
+1. Transfer the new **1.0.1+2** `build\app\outputs\flutter-apk\app-release.apk` to your phone by
    USB, cloud drive, or another file-transfer method you normally use.
 2. Open the APK from your phone's Files app. If Android asks, allow that Files app
    to install this APK, then complete installation. You can turn that permission
@@ -75,14 +78,21 @@ files in the same installed folder, click Reload on AnkiDSA at
    bypass an installation error.
 
 The APK supports Android 7.0 and later. It is signed for this beta and does not
-require a Play Store listing. No physical phone was available during automated
-verification, so this installation and device test are still required.
+require a Play Store listing. It retains the previous signing certificate and
+should install as an update. Physical-device acceptance of 1.0.1+2 is pending;
+the earlier direct-push checks used 1.0.0+1. Keep existing data and report any
+installation error instead of uninstalling automatically.
 
 To test the new reminders, open the account menu > Reminders, turn on Daily
 reminders, and allow Android notifications. Wait for registration to finish.
 Follow [NOTIFICATIONS.md](NOTIFICATIONS.md) to check background receipt, taps,
 scheduled delivery, opt-out, and account switching. A configured provider or a
 successful registration does not by itself prove the phone displayed a reminder.
+At the 1 November check, the test account had no saved questions, so no daily
+reminder was due. Complete the real-problem trial below, then test the next actual
+due morning. Wake requests run at 06:30/35/40/45, 09:30/35/40 and 11:30/35/40 IST;
+the backend sends only within 06:30–12:00. The GitHub 12:47 IST job audits results
+and may be delayed; it no longer schedules the phone notification.
 
 ## First complete test: computer to phone and back
 
@@ -111,9 +121,9 @@ still needs your browser; automation used a controlled LeetCode test page.
 ## A practical seven-day trial
 
 Choose a convenient 10–15 minute review session. You can enable Daily reminders
-in the new Android build; use a phone alarm as a backup while notification delivery
-is being verified. Reminders apply only when questions are due. Review what is
-actually due; do not change your device clock or force a problem to become due
+in the new Android build; use a phone alarm as a backup while scheduled morning
+delivery is being verified. Reminders apply only when questions are due. Review
+what is actually due; do not change your device clock or force a problem to become due
 for a test.
 
 | Day | Focus |
@@ -144,7 +154,8 @@ client, then record which client has the correct value.
 
 Ready to expand means: real Accepted capture works, notes and reviews survive
 restarts, the same account stays consistent across clients, and no unresolved
-issue can lose or mix up study data. Complete the physical-phone and scheduled
-Firebase delivery checks and the remaining second-mailbox recovery check before treating this
-release as complete. Store publication remains deferred; broader device coverage
-should be recorded separately from the devices actually tested.
+issue can lose or mix up study data. Complete scheduled Firebase delivery,
+daily deduplication/no further sends after queue completion, and physical-phone
+sign-out/account switching before treating this release as complete. Store
+publication follows your trial and a separate Play Store preparation step; broader device coverage should be recorded
+separately from the devices actually tested.

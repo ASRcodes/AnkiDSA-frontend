@@ -1,7 +1,7 @@
 # AnkiDSA
 Keep the patterns you learn.
 
-See [CURRENT-RELEASE.md](CURRENT-RELEASE.md) for the 29 October startup and Firebase notification release, artifacts, and remaining verification.
+See [CURRENT-RELEASE.md](CURRENT-RELEASE.md) for the 1 November reminder repair, APK 1.0.1+2, live web release, and remaining acceptance checks.
 
 The backend is live at https://ankidsa-backend.onrender.com. The web app is live at https://ankidsa.netlify.app. See [CURRENT-RELEASE.md](CURRENT-RELEASE.md) for current verification and remaining setup, [LIVE-STATUS.md](LIVE-STATUS.md) for earlier deployment history, [DEPLOYMENT.md](DEPLOYMENT.md) for release instructions, and [branding/README.md](branding/README.md) for the shared logo system. Release builds require explicit HTTPS configuration; the local demo remains available below.
 
@@ -31,8 +31,8 @@ Use `.\scripts\stop-demo.ps1` to stop processes started by the launcher. Use `-R
 
 - Chrome Manifest V3 capture, metadata extraction, editable notes, accepted-submission detection, and a persistent retry queue.
 - Password-based accounts, signed sessions, account-scoped problem access, and isolated local demo data.
-- Email password recovery with expiring, single-use links and revocation of earlier sessions; live Brevo recovery is enabled, with one controlled reset flow and actual inbox receipt verified. See CURRENT-RELEASE.md for remaining checks.
-- Opt-in phone reminders, token rotation, and account-safe device registration; Firebase delivery is configured, with physical-phone receipt and scheduled delivery still awaiting verification.
+- Email password recovery with expiring, single-use links and revocation of earlier sessions; live Brevo recovery is enabled, with one complete controlled reset flow and actual reset-email inbox receipts verified for two mailboxes. See CURRENT-RELEASE.md for remaining checks.
+- Opt-in phone reminders, token rotation, and account-safe device registration. Supabase morning wake jobs and a backend timer now drive delivery; GitHub audits the results. Previous-APK direct FCM receipt/taps and opt-out/re-enable passed. New-APK phone checks, scheduled due delivery and account switching remain pending. An empty collection does not generate a reminder.
 - Responsive review queue, searchable collection, editing and deletion, notes hidden during recall, and accurate review statistics.
 - Transactional scheduling with ownership checks, stale-version protection, and idempotent retries.
 - PostgreSQL migrations, environment-based production configuration, and Android signing configuration.

@@ -1,109 +1,97 @@
-# Current release - 29 October 2026
+# Current release - 1 November 2026
 
 Web: https://ankidsa.netlify.app
+
 API: https://ankidsa-backend.onrender.com
 
-## Ready to use
+## Reminder incident and repair
 
-- Web startup no longer waits for saved-session verification to render the app.
-- Web starts waking the API while downloading Flutter. App, extension, and reminder
-  runner use bounded 180-second readiness waits without replaying writes.
-- Firebase Android registration, FCM-only service account, private Render secret,
-  validation-only send, backend deployment, and GitHub morning schedule are configured.
-- Signed notification-enabled APK: `build/app/outputs/flutter-apk/app-release.apk`.
-  SHA-256: `E159EBC7422E4293AA1826570B11B071DDD451AD88767535DC04D33B41542D9D`.
-  Existing beta signing certificate retained. Size: 53,332,767 bytes.
-- Matching signed AAB: `build/app/outputs/bundle/release/app-release.aab`.
-  SHA-256: `604BEB233BBB68D9C3605D8779F6F55D45266C47E80371FB7D42A5BB0C40AF3E`.
-  Size: 44,446,644 bytes. Signature, packaged Firebase resources, notification
-  declarations, and archive integrity verified. The APK above was not replaced.
-- Password recovery is enabled through Brevo Free; one controlled live reset flow
-  and its actual reset-email inbox receipt are verified.
-- Updated manual-install Chrome ZIP: `build/extension/ankidsa-extension.zip`.
-- Privacy/support pages describe optional Firebase token processing and live
-  password recovery through Brevo.
+From 29 October through 1 November, GitHub reminder jobs started after the
+06:30–12:00 Asia/Kolkata delivery window. The backend correctly refused late sends;
+the workflows failed and generated email without delivering a reminder. Earlier
+phone tests exercised direct FCM sends, so they did not verify this scheduling path.
 
-## Live verification
+Supabase now has three wake jobs and one history-retention job. The ten public
+`GET /ready` requests run at **06:30/35/40/45, 09:30/35/40, and 11:30/35/40 IST**.
+They carry no credentials. After startup, the backend checks reminders every
+60 seconds while awake, using the existing morning window, leases, retries and
+daily delivery records. GitHub runs a read-only delivery audit at **12:47 IST**;
+that audit may be delayed, and manual delivery remains restricted to the window.
 
-Render deployment `dep-dbh5j0lg1s2s73cvhvkg` is live at backend revision `0b6ed1d6d3e028ce66060e3f39d7a840861d1cd2`. Health and database readiness
-return 200; dailyReminders=true and passwordRecovery=true. An unauthenticated
-reminder trigger is rejected with 401.
-The authenticated trigger returns outside_window at this time of night, without
-sending a notification. GitHub repository REMINDERS_ENABLED=true is verified.
-Morning attempts remain 06:33, 06:53, 07:13 and 09:47 Asia/Kolkata, with daily
-deduplication per registered device. First scheduled delivery still needs verification.
+The audit reports provider failures, missed morning execution, current pending
+work, and the last batch's recorded backlog, including unstaged devices. A
+successful wake request is not evidence that a phone received a notification.
+The owner's study account had **zero saved questions** at the 1 November check, so no daily
+reminder was due for that account. Add real study questions before the phone trial.
 
-Latest Netlify deployment: `6ae25b6f54976c7dec32d872`, ready. The updated privacy
-and support pages cover Brevo password recovery and match the built files. The
-compiled application, index, startup script, and public App Links association
-remain unchanged, with their deployed hashes verified.
+## Verified builds and deployments
 
-The release certificate's SHA-1 and SHA-256 are registered in Firebase. The Android
-client key is restricted to `app.ankidsa.mobile` and the release SHA-1, with only
-Cloud Logging, FCM Registration, Firebase Installations, and Firebase Management
-APIs allowed. These match [Firebase's required API guidance](https://firebase.google.com/docs/projects/api-keys).
-Physical-phone registration after this restriction is still pending.
+| Artifact | Current verification |
+| --- | --- |
+| Android APK | **1.0.1+2**, source `c2fa5743ca0cf6674f4776a1671c535c8dc3b163`; 53,332,835 bytes |
+| Android AAB | **1.0.1+2**, same source; 44,451,003 bytes |
+| Web | Netlify `6ae73478c2249eb0795a76e8`, ready at `c2fa574`; deployed application/configuration/policy/App Links hashes verified |
+| Backend, including proxy fix | `f6f36cb1cee40061ed8d325386ac395fe967e90b`, live on Render `dep-dbjjcqnb9u1s73e7a1o0`; health, feature flags, protected audit and dispatcher startup verified |
 
-Client CI [40753563031](https://github.com/ASRcodes/AnkiDSA-frontend/actions/runs/40753563031)
-passed for `bc06712a311efa54f36325a7e6e086dd5f525698`: analysis, 26 Flutter tests,
-3 JavaScript tests, web build, all six browser flows, and Android debug/release
-compilation. Four Firebase configuration tests also passed locally. Backend CI
-[40752429357](https://github.com/ASRcodes/AnkiDSA-Backend/actions/runs/40752429357)
-passed for the scheduler fix `6e60f84`, including five scheduler tests. The subsequent backend startup change
-`0b6ed1d` passed full CI [40757324830](https://github.com/ASRcodes/AnkiDSA-Backend/actions/runs/40757324830),
-including PostgreSQL, production TLS, and Docker startup checks. It replaces
-startup-time BCrypt dummy-hash generation with a precomputed cost-12 value while
-preserving the per-login password check for unknown accounts.
+APK: `build/app/outputs/flutter-apk/app-release.apk`
 
-The full cold-start flow passed on backend revision `0b6ed1d` after 16 minutes
-30 seconds without probe traffic. A fresh Flutter process used the actual ApiService
-to sign in, verify the account, load its collection, save one synthetic problem,
-reload, delete it, reload again, and log out. Exactly one create request was sent.
-Render logs confirmed a new process after the client probe began, on the same
-deployment. The generated account and its dependent records were removed with an
-exact account-ID/email guard; all scoped cleanup counts were zero.
+SHA-256: `ee7e596767693df0d5636e6e3c3540de8197b1b5a517ca0a1fa6233a3075a462`
 
-Login took 183.8 seconds including readiness; the login POST itself took 14.8
-seconds, and the complete flow took 195.2 seconds. Spring startup took 141.603
-seconds (154.003 seconds of process time). This verifies successful recovery after
-idle sleep; it does not establish a startup speedup. A prior read-only probe on
-the preceding revision took 177.8 seconds, but these are not controlled benchmarks.
-Free-host cold starts remain slow despite prompt local rendering.
+AAB: `build/app/outputs/bundle/release/app-release.aab`
 
-## Live password recovery
+SHA-256: `8a99dbf9cc0ca29c07beb998cd55350f8e5bb513b752b851eb296aaadab494e0`
 
-Brevo Free is configured with a verified sender and the restricted transactional
-key `ankidsa-password-recovery`, stored privately in Render. The application caps
-mail attempts at 250 per rolling 24 hours. The key expires on 28 October 2027 and
-can become inactive after 90 days without use; see DEPLOYMENT.md for rotation.
+Both Android artifacts retain the previous release signer; signatures, manifests,
+Firebase resources, ARM64 contents and archive integrity passed verification.
+The prior `1.0.0+1` artifacts are retained under `build/releases/android/1.0.0+1`.
+Web ZIP SHA-256: `e718f78c2d819de4051771a684f9b7c20e0a0f90659650c5a8bee999350d19f4`.
+The manual Chrome package remains `build/extension/ankidsa-extension.zip`.
 
-One temporary account on a controlled secondary mailbox completed the live flow:
-the actual reset message was delivered by Brevo and confirmed in the inbox, reset
-succeeded, earlier sessions and the old password were rejected, the new password
-worked, and token reuse returned 400. The temporary account was removed afterward.
-The owner's study password was not changed. Direct provider test messages also
-reached two controlled inboxes; these do not establish two actual reset flows.
-The primary study address was not registered at verification, so its generic
-forgot-password response correctly sent no email. The owner will create that
-account before testing it.
+Client CI [41307141997](https://github.com/ASRcodes/AnkiDSA-frontend/actions/runs/41307141997)
+and backend CI [41307439070](https://github.com/ASRcodes/AnkiDSA-Backend/actions/runs/41307439070)
+passed. Focused checks passed 34 Java, 17 Python and 32 Flutter tests; Flutter
+analysis passed. Proxy-fix CI
+[41308315930](https://github.com/ASRcodes/AnkiDSA-Backend/actions/runs/41308315930)
+passed. The final deployment is live with `CLIENT_IP_MODE=render-cloudflare`;
+login limits now use the verified public Render client header. Health and database
+readiness return 200, both reminder/recovery flags are enabled, and unauthenticated
+audit access returns 401. The first morning cycle after this evening deployment
+remains a separate acceptance check.
 
-## Remaining owner and release checks
+A real one-off Supabase cron job ran on 1 November at 12:50 UTC and obtained
+HTTP 200 with `status=ready`; the temporary job was removed. The four production
+jobs remain active. The backend emitted its automatic-dispatcher-ready log.
+This verifies the scheduler-to-API connection, not a cold-host wake or scheduled FCM receipt.
 
-1. Install the new APK, sign in, and enable account menu > Reminders > Daily reminders.
-   Allow Android notifications. The owner will install manually.
-2. Verify a targeted notification on the owner's registered phone, background receipt,
-   and tap-to-queue. No real push has been sent yet; provider validation is not receipt.
-3. Verify an actual recovery message for a second registered controlled mailbox.
-   One full live reset and its inbox receipt passed; the two direct provider test
-   emails are separate evidence. The owner will create the primary study account
-   before this check.
-4. Complete the phone checks in NOTIFICATIONS.md: foreground/background/swiped-away
-   receipt, tap to the correct queue, scheduled morning delivery with due questions,
-   no further daily sends after completion, opt-out and account switching.
-5. Finish the current real Accepted-submission and phone cross-client trial in
-   TESTING-GUIDE.md. Previous controlled-page tests do not prove real live capture.
+## Startup and previously verified flows
 
-The existing Free hosting plans remain in use. Render still sleeps after inactivity;
-the startup fixes improve rendering and recovery but do not eliminate host wake time.
-Store publication remains deferred as previously planned. Older LIVE-STATUS.md sections
-are historical; see NOTIFICATIONS.md and STARTUP-FIXES.md for this release.
+The app renders its restored session before remote verification; web warmup
+runs alongside the Flutter download. Flutter and extension readiness waits remain
+180 seconds; the operations runner now allows five minutes. Extracted backend
+JAR packaging reduces class-loading overhead. The deployment above logged
+111.999 seconds of Spring startup and 118.115 seconds of process time; this is a
+deployment observation, not a controlled cold-start performance comparison.
+Render Free still sleeps after inactivity.
+
+On the previous APK, direct FCM receipt and queue opening passed on the physical
+phone in foreground, background and swiped-away states. Opt-out removed registration;
+re-enable restored it. Those results are historical and do not certify the new
+APK's physical-device or scheduled-delivery behavior.
+
+Brevo recovery remains configured privately. One complete controlled reset flow
+verified single-use links and old-session/password invalidation; actual reset
+emails reached two controlled inboxes. The existing study-account password was
+not changed. Detailed historical evidence remains in STARTUP-FIXES.md.
+
+## Remaining acceptance before public launch
+
+1. Install APK 1.0.1+2, verify reminder registration and sign-out/account switching
+   on the phone, then complete a real Accepted-submission/notes/review sync trial.
+2. Verify morning delivery with real due questions, queue opening, daily
+   deduplication and no further sends after completing the queue.
+3. Complete the user trial in TESTING-GUIDE.md before broader distribution.
+   Play Store publication is a later step, not completed by these builds.
+
+Existing Free plans remain in use. Automated checks, live provider acceptance,
+phone receipt and the user trial are separate verification stages; this record
+does not claim production availability guarantees or completed public launch.

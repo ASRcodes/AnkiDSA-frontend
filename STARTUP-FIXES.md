@@ -1,4 +1,29 @@
-# Startup and notification release - 29 October 2026
+# Startup and notification release
+
+## Current update - 1 November 2026
+
+The live web release is Netlify `6ae73478c2249eb0795a76e8` from `c2fa574`.
+Signed Android `1.0.1+2` is built and verified. Backend `f6f36cb`, including the
+reminder and proxy fixes, is live on `dep-dbjjcqnb9u1s73e7a1o0`; health, feature
+flags, audit authorization and automatic dispatcher startup passed live checks. See CURRENT-RELEASE.md for artifact hashes and CI.
+
+Delayed GitHub jobs caused the repeated reminder failures after the morning
+window. Supabase now provides ten morning wake requests, and a nonblocking
+backend timer dispatches every minute while awake. GitHub performs a read-only
+12:47 IST audit. One real temporary cron request returned HTTP 200/ready and was
+removed; this was not a cold-host test or evidence of scheduled phone receipt.
+
+The backend now uses extracted JAR packaging. The live deployment logged Spring
+startup of 111.999 seconds and process time of 118.115 seconds. These observations
+are not a controlled comparison against the historical cold-start measurement.
+Client readiness remains 180 seconds; the operational runner allows five minutes.
+No paid hosting was added. Phone acceptance of the new APK, scheduled due delivery
+and the real cross-client trial remain pending; Play Store work follows that trial.
+
+## Historical verification - 29 October 2026
+
+The remainder records the prior release's evidence, timings and artifacts; current
+versions and deployment identifiers are listed above and in CURRENT-RELEASE.md.
 
 The saved-login screen previously waited for server verification before rendering.
 Render Free spins down after inactivity; the previously observed server startup
@@ -32,11 +57,12 @@ Historical initial Firebase-enabled Render deployment: dep-dbh4glec6qcc73cib380,
 at validated server revision c84f951ef0b0033f92c61ee74b23c776e64deb50. The scheduler-only
 source update did not change that Java server. The latest deployment is recorded below.
 
-Remaining release checks: install the new FCM APK on a physical Android phone,
-enable reminders, verify a targeted delivery/tap, and verify a scheduled morning
-delivery. Live password recovery now passes the controlled-account flow and
-actual inbox check below; a second actual recovery-message check remains. Store
-publication remains deferred as previously planned.
+Remaining release checks: scheduled morning delivery with due questions, daily
+deduplication/no further sends after completion, physical-phone sign-out/account
+switching, and the real Accepted-submission/cross-client trial. Direct phone
+delivery and opt-out/re-enable passed as recorded below. Live password recovery
+passed one complete controlled-account flow and actual reset-message inbox checks
+for two mailboxes. Store publication remains deferred as previously planned.
 
 ## Additional server startup check
 
@@ -56,7 +82,7 @@ compiler setting: median readiness was 29.70 seconds with the default and 39.05
 seconds with C1-only compilation, with high variance; C1 warm BCrypt login was
 about 19% slower. Production retains the existing compiler and memory settings.
 
-Latest server deployment: `dep-dbh5j0lg1s2s73cvhvkg`, live at the same backend
+Historical server deployment: `dep-dbh5j0lg1s2s73cvhvkg`, live at the same backend
 revision `0b6ed1d`, with health/readiness 200 and both daily reminders and password
 recovery enabled. The cold-start acceptance below ran on the preceding deployment
 `dep-dbh540nlk1mc73f8vj70` of that revision, before email configuration changed.
@@ -83,6 +109,19 @@ and verified zero remaining scoped rows. The private probe credentials were remo
 This acceptance check exercised the real Flutter service code against production;
 it does not replace the separate physical-phone and rendered-client checks.
 
+## Physical phone notification verification
+
+The signed APK was installed on the owner's phone and registered successfully
+with the restricted Firebase Android key. The owner confirmed receipt and queue
+opening for direct FCM tests in foreground, background, and swiped-away states.
+Opt-out left zero active registrations; re-enabling restored one. No send was
+attempted while reminders were off. The original APK and AAB were unchanged.
+
+These direct FCM sends exercised the release app and sender configuration. They
+do not establish backend scheduled dispatch, due-question selection, daily
+deduplication, or no further reminders after queue completion. Those checks and
+sign-out/account switching remain pending.
+
 ## Live password-recovery verification
 
 Brevo Free now sends recovery email through a verified sender and a restricted
@@ -93,7 +132,9 @@ password signed in; and reuse of the same reset token returned 400. The account
 and its tracked temporary records were removed after verification. No existing
 study-account password was changed.
 
-The owner also confirmed direct provider test messages in two mailboxes. Those
-messages are distinct from the one actual recovery flow above. A second actual
-recovery-message check remains; the primary study address had no registered
-account when checked, so its generic request response correctly sent no email.
+After registering the primary study account, the owner also confirmed its actual
+reset message in the inbox. Its token was not read or redeemed and its password
+was not changed. Actual reset-message inbox receipt is therefore verified for
+two controlled mailboxes, while the complete password-change flow was exercised
+only on the temporary account. Direct provider test messages were separately
+confirmed in both inboxes.

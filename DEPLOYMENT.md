@@ -1,6 +1,6 @@
 # AnkiDSA $0 beta deployment
 
-This guide deploys the existing two repositories. Frontend: `ASRcodes/AnkiDSA-frontend` (this directory). Backend: `ASRcodes/AnkiDSA-Backend` (locally `C:\SpringBoot\ankidsa`). The backend is live at https://ankidsa-backend.onrender.com and the web app at https://ankidsa.netlify.app. See [CURRENT-RELEASE.md](CURRENT-RELEASE.md) for current verification and remaining checks, and [LIVE-STATUS.md](LIVE-STATUS.md) for earlier deployment history. Web and API publication and Firebase provider configuration are verified. Brevo recovery is enabled: one controlled live reset, session/password invalidation, token reuse prevention, and actual reset-message inbox receipt passed. Physical-phone and scheduled FCM delivery, a second actual recovery-message check, and the live beta accepted-submission capture checks remain pending.
+This guide deploys the existing two repositories. Frontend: `ASRcodes/AnkiDSA-frontend` (this directory). Backend: `ASRcodes/AnkiDSA-Backend` (locally `C:\SpringBoot\ankidsa`). The backend is live at https://ankidsa-backend.onrender.com and the web app at https://ankidsa.netlify.app. See [CURRENT-RELEASE.md](CURRENT-RELEASE.md) for current verification and remaining checks, and [LIVE-STATUS.md](LIVE-STATUS.md) for earlier deployment history. Web and API publication and Firebase provider configuration are verified. Brevo recovery is enabled: one complete controlled reset flow verified session/password invalidation and token reuse prevention, and actual reset-message inbox receipt passed for two controlled mailboxes. The owner's study password was not changed. Direct FCM receipt and queue opening passed on the previous APK 1.0.0+1 in foreground, background, and swiped-away states; opt-out/re-enable passed too. Scheduled morning delivery, daily deduplication/no further sends after queue completion, sign-out/account switching, and live beta Accepted-submission/cross-client checks remain pending.
 
 **Do not upload validation artifacts to a live beta.** They use `https://api.validation.invalid`. Rebuild with the real provider URLs. Never paste secrets into chat, issues, screenshots, commit messages, Flutter defines, or extension configuration.
 
@@ -8,22 +8,24 @@ This guide deploys the existing two repositories. Frontend: `ASRcodes/AnkiDSA-fr
 
 ```text
 Flutter Web → Netlify Free (*.netlify.app)
-                       ↓ HTTPS
-Flutter Android ───→ one Spring Boot / Java 21 API on Render Free (*.onrender.com)
-Chrome extension ──→                    ↓ JDBC/TLS
+                       â†“ HTTPS
+Flutter Android â”€â”€â”€→ one Spring Boot / Java 21 API on Render Free (*.onrender.com)
+Chrome extension â”€â”€→                    â†“ JDBC/TLS
                               existing Supabase PostgreSQL Free
-GitHub Actions scheduled trigger → API → Firebase Admin SDK → FCM → Android
+Supabase morning GET /ready wakes → API timer → Firebase Admin SDK → FCM → Android
+GitHub Actions afternoon read-only audit → API delivery status
 Password recovery → API → Brevo Free HTTPS API → verified recipient mailbox
 ```
 
 | Component | Provider | Plan | Cost | Free-tier limitation | Fallback |
 |---|---|---|---|---|---|
 | Web | Netlify | Free, prebuilt static deploy | $0 | Existing team is on legacy Free; consult its usage dashboard. New credit-based Free plans have 300 credits/month | Build locally, preview before production; keep the previous artifact |
-| API | Render | Free Web Service, one instance | $0 | 512 MB RAM, 0.1 CPU, 750 instance-hours/month; sleeps after 15 idle minutes; cold start roughly a minute; ephemeral disk | Wait/retry; suspension when quotas exhaust |
+| API | Render | Free Web Service, one instance | $0 | 512 MB RAM, 0.1 CPU, 750 instance-hours/month; sleeps after 15 idle minutes; cold starts can take several minutes; ephemeral disk | Wait/retry; suspension when quotas exhaust |
 | Database | Existing Supabase | Free | $0 | 500 MB database, 5 GB egress; low-activity projects can pause after 7 days; no automatic downloadable backups | Resume in dashboard; external manual backups; stop writes at quota |
 | Email | Brevo | Free | $0 | 300 sends/day, sender verification and account approval; no owned-domain authentication | App caps 250 attempts/rolling 24h; retry later, never charge |
 | Push | Firebase | Spark / FCM | $0 | Best-effort push, device permission and connectivity required | In-app review queue |
-| CI/scheduler | GitHub Actions | Free allowance | $0 | Private repos: 2,000 Linux minutes/month and 500 MB artifacts; schedules can be delayed/dropped | Local builds; manual workflow run; later scheduled retry |
+| CI/delivery audit | GitHub Actions | Free allowance | $0 | Schedules can be delayed/dropped; audit is independent of morning delivery | Local builds; manual read-only audit |
+| Reminder wake | Existing Supabase pg_cron + pg_net | Existing Free project | $0 within quotas | Three morning wake jobs and one scoped retention job; database availability required | Backend also dispatches while awake from ordinary app use |
 | Android testing | Local APK / Firebase App Distribution | No-cost distribution | $0 | Tester invitation; APK distribution without Play; Firebase releases expire after 150 days | Sideload signed APK |
 | Extension testing | Chrome | Unpacked ZIP | $0 | Developer-mode installation and manual updates | Reinstall unpacked folder preserving extension ID |
 | HTTPS/domain | Provider subdomains | Included | $0 | URLs must be allocated before release rebuild | Keep provider URLs |
@@ -73,22 +75,25 @@ Netlify plan checked 2026-10-15; other limits last reviewed 2026-09-24: [Render 
 6. **Project settings → Cloud Messaging**: confirm **Firebase Cloud Messaging API (V1)** is enabled. If needed open **Google Cloud Console → APIs & Services → Library → Firebase Cloud Messaging API → Enable**, on this same project. No legacy FCM server key is used.
 7. Prefer a dedicated server identity in **Google Cloud Console → IAM & Admin → Service Accounts → Create service account** named `ankidsa-fcm`. Grant **Firebase Cloud Messaging API Admin** (`roles/firebasecloudmessaging.admin`) on this project, not Owner/Editor. Open this service account → **Keys → Add key → Create new key → JSON**. Alternatively Firebase **Project settings → Service accounts** identifies the project/admin identity, but avoid broad default roles where practical.
 8. Treat the downloaded JSON as a private credential. **Render service → Environment → Secret Files → Add secret file**, name `firebase-service-account.json`, paste its contents directly in Render. Set `GOOGLE_APPLICATION_CREDENTIALS=/etc/secrets/firebase-service-account.json` and `FIREBASE_PROJECT_ID` to the project ID. Remove the download from general Downloads after securely storing it. Never commit/upload it to Netlify or the extension.
-9. Set `NOTIFICATIONS_ENABLED=true` after credentials are ready. Admin SDK requests have bounded connection/read/write and delivery timeouts. Android asks for notification permission only after opt-in, updates token registrations, removes old tokens, handles foreground banners/background system notifications/taps, and cleans up on logout. Invalid/unregistered tokens are removed by the server. Real Android 13+ permission and real-device delivery tests remain mandatory.
+9. Set `NOTIFICATIONS_ENABLED=true` after credentials are ready. Admin SDK requests have bounded connection/read/write and delivery timeouts. Android asks for notification permission only after opt-in, updates token registrations, removes old tokens, handles foreground banners/background system notifications/taps, and cleans up on logout. Invalid/unregistered tokens are removed by the server. Keep real Android 13+ permission and real-device delivery checks in the acceptance suite. The current physical-phone results and remaining scheduled/sign-out checks are recorded in NOTIFICATIONS.md.
 
 ## 4. Brevo with no owned domain
 
 Current setup: Brevo Free, verified sender, and the restricted transactional API
 key `ankidsa-password-recovery` in private Render configuration. Recovery is enabled
-on deployment `dep-dbh5j0lg1s2s73cvhvkg`. The key expires on **28 October 2027** and
+on the current backend; see CURRENT-RELEASE.md for the verified deployment. The key expires on **28 October 2027** and
 can become inactive after **90 days without use**. Before expiry or after provider
 inactivity disables it, create a replacement with the same restricted permissions,
 update Render privately, deploy, and verify actual recovery delivery before retiring
 the old key where overlap is available. Do not put key values in source or client builds.
 
 One temporary controlled account passed the complete live recovery flow and its
-reset email was confirmed in the inbox. It was removed after the test. Direct
-provider test messages reached two inboxes, but a second actual recovery-message
-check is still required by step 5 below. No existing study-account password changed.
+reset email was confirmed in the inbox. It was removed after the test. After the
+owner registered the primary study account, its actual reset email was also
+confirmed in the inbox. This satisfies the two-mailbox delivery check in step 5;
+only the temporary account underwent a password change. The owner's token was
+not read or redeemed, and the owner's study password was not changed. Direct
+provider test messages were separately confirmed in both inboxes.
 
 1. **Brevo → Sign up → Free**, verify your existing mailbox, complete the requested legitimate account information, and obtain transactional sending approval. Do not add paid credits or a billing method.
 2. **Settings → Senders, Domains & Dedicated IPs → Senders → Add a sender**. Name `AnkiDSA`, email an existing mailbox you control (a free mailbox is acceptable only if Brevo approves it). Verify the code/link sent to that mailbox. `MAIL_FROM` must be the verified **bare email address**, not `Name <address>`.
@@ -124,33 +129,54 @@ check is still required by step 5 below. No existing study-account password chan
 | `FIREBASE_PROJECT_ID` | Public Firebase project ID |
 | `GOOGLE_APPLICATION_CREDENTIALS` | `/etc/secrets/firebase-service-account.json` (contents 🔒) |
 | `REMINDER_TRIGGER_SECRET` 🔒 | Another independent random secret; same value in GitHub reminders environment |
-| `TRUSTED_PROXY_CIDRS` | Initially empty. Populate only after verifying the actual trusted ingress chain; never `0.0.0.0/0` to trust arbitrary forwarded headers |
+| `TRUSTED_PROXY_CIDRS` | Empty in verified public Render mode; elsewhere configure only verified ingress ranges, never `0.0.0.0/0` |
+| `CLIENT_IP_MODE` | `render-cloudflare` only for the matching verified public Render web service; otherwise retain `cidr` and its explicit proxy boundary |
 | `JAVA_TOOL_OPTIONS` | Docker default: `-XX:InitialRAMPercentage=10 -XX:MaxRAMPercentage=50 -XX:+ExitOnOutOfMemoryError`; keep within Free memory |
 
-Auth rate limiting is 30 POST attempts per 10 minutes per resolved address in one process. Behind a shared proxy, an empty trusted-proxy list may group users together. Verify Render's forwarded-IP behavior before launch and configure only trusted ingress ranges; do not blindly trust client-supplied `X-Forwarded-For`. This is a beta limiter, not distributed abuse protection.
+Auth rate limiting is 30 POST attempts per 10 minutes per resolved address in one process. Backend revision `f6f36cb` adds opt-in `CLIENT_IP_MODE=render-cloudflare` for the matching public-only Render web runtime: it validates one canonical `CF-Connecting-IP`, ignores caller-controlled forwarding chains, and fails closed for malformed/multiple headers. Set `API_PUBLIC_URL` to the exact `RENDER_EXTERNAL_URL` and leave `TRUSTED_PROXY_CIDRS` empty for that mode. Default CIDR mode is preserved elsewhere. Full CI and final live deployment checks passed on 1 November; review the trust boundary again before private ingress or a different host. This remains an in-process limiter, not distributed abuse protection.
 
 **Manual Deploy → Deploy latest commit** only after both repositories' checks pass. Inspect logs for startup completion without sharing them publicly. Open `https://YOUR.onrender.com/health` → `{"status":"ok"}` and `/ready` → `{"status":"ready"}`. These are custom endpoints; there is no `/actuator/health`. Readiness also checks the coordination schema. `/internal/reminders` without its dedicated header must return 401. CORS must accept only the exact production origin/extension ID; localhost and arbitrary Netlify previews must fail in production.
 
-## 6. GitHub Actions and reminders
+## 6. Automatic reminders and GitHub delivery audit
 
-1. Keep the two existing repos. **Each GitHub repository → Settings → Actions → General → Workflow permissions → Read repository contents**. Do not enable PR workflows to access production secrets; there is no `pull_request_target` workflow. Review third-party action updates before merging. **Settings → Branches/Rules → main**: require review and the appropriate validation check where your account's free plan supports rules. Do not buy a plan solely for a gate; otherwise use manual review.
-   Publish the reviewed backend changes first: the frontend browser job checks out the public companion backend's `main`. For a coordinated branch test, set frontend **Settings → Secrets and variables → Actions → Variables → `BACKEND_TEST_REF`** to the reviewed backend commit/branch; remove the override after both main branches contain this release. No cross-repository access token is needed for these public repositories. Use the current release record and repository checks to identify the reviewed revisions; older deployment records describe earlier states.
-2. Backend **Settings → Environments → New environment → `reminders`**. Restrict deployment branches to `main` where supported. Add environment secret `REMINDER_TRIGGER_SECRET`; add environment variable `API_PUBLIC_URL`. Scheduled jobs must not require a human reviewer on every run. Keep secrets out of ordinary repository-level PR jobs.
-3. Backend **Actions → Daily reminder delivery → Enable workflow**, then **Run workflow → main** during the configured window. Schedules run at **06:33, 06:53, 07:13 and 09:47 Asia/Kolkata** (cron is UTC). Backend accepts work from 06:30 until 12:00. To change zones/window, change both backend settings and cron intentionally. No constantly running JVM scheduler or keep-alive ping is used.
-4. The Python trigger waits for readiness, then sends `POST /internal/reminders` with `X-Reminder-Secret`. It refuses redirects, masks raw responses/errors, bounds runtime to six minutes and work to eight calls; workflow timeout is eight minutes. It reports only aggregate status. GitHub can delay/drop schedules and disables inactive public-repo schedules after 60 days; check failures and enable/manual-run as needed. There is no 06:30 delivery guarantee.
-5. PostgreSQL owns a global renewable lease and per-device/day/session unique delivery rows. States: PENDING, PROCESSING, SENT, RETRYABLE, FAILED. Claims are fenced by UUID; expired claims can be reclaimed. Retryable sends back off up to five attempts. SENT is written only after FCM accepts a send; invalid tokens are removed. Unfinished records remain available for later triggers inside the window. Old pending days expire rather than sending stale reminders. Failed records remain for inspection for 30 days.
-6. **Exactly-once external delivery is impossible across a crash between FCM acceptance and database acknowledgment.** Leases prevent normal concurrent duplicate sends; retries after an ambiguous network/crash outcome can still duplicate transport delivery. Stable delivery IDs, Android notification tags/collapse keys and foreground deduplication reduce duplicate presentation. Do not promise a delivery receipt: FCM acceptance is not proof the phone displayed it.
-7. Check aggregate status privately in Supabase SQL Editor:
+The 29 October–1 November failure was delayed GitHub jobs arriving after the
+06:30–12:00 Asia/Kolkata send window. The current backend timer starts after
+application readiness and checks eligible reminders every 60 seconds while awake.
+It shares the same lease, daily records and retry rules as manual dispatch.
 
-   ```sql
-   SELECT study_date, status, failure_code, count(*)
-   FROM reminder_deliveries
-   GROUP BY study_date, status, failure_code ORDER BY study_date DESC;
-   ```
-
-   Do not manually set SENT or clear locks during active runs. Investigate FAILED/configuration failures before requeueing reviewed rows. Scheduler and review requests have independent idempotency mechanisms; review request UUIDs are retained across a client retry.
-8. Four six-minute runs/day would consume up to ~744 Linux minutes in a 31-day month, plus startup overhead; normally runs are much shorter. Reserve the rest of the private-repo allowance for builds. Keep artifact retention at three days, monitor **Settings → Billing & licensing → Usage/Budgets**, and set paid usage budgets to zero/stop usage where offered. Do not add a payment method. Reduce build frequency or run locally if necessary; do not enable paid overages.
-9. Optional backend deployment automation: create a separate `production` environment restricted to main, secret `RENDER_DEPLOY_HOOK` copied from Render **Settings → Deploy Hook**. The manual **Deploy approved backend revision** workflow requests deployment of Render's configured branch; first confirm main's Backend validation passed and the intended revision is the latest main. This workflow does not publish unreviewed PR code.
+1. After deploying the verified coordinator with notifications enabled, apply the
+   backend's reviewed `ops/supabase-reminder-wake.sql` to the existing project.
+   It creates three named public `GET /ready` wake jobs and one scoped retention
+   job. No secret or user data is sent through pg_net. The four jobs are configured;
+   a real one-off cron request reached readiness and was removed after verification.
+2. Wake times are **06:30/35/40/45, 09:30/35/40 and 11:30/35/40 Asia/Kolkata**.
+   SQL uses UTC. Each HTTP request has a five-minute timeout. History retention
+   deletes only these jobs' records older than seven days. Do not treat enqueue
+   success or HTTP readiness as proof of FCM delivery.
+3. Keep the backend `reminders` GitHub environment main-only, with the existing
+   `REMINDER_TRIGGER_SECRET` and `API_PUBLIC_URL`. `REMINDERS_ENABLED=true` enables
+   the daily **12:47 IST read-only audit**. It may be delayed. Manual workflow
+   dispatch defaults to `audit`; `deliver` still obeys the morning send window.
+   Production secrets remain unavailable to ordinary pull-request workflows.
+4. The Python runner permits five minutes of readiness waiting and seven minutes
+   total; manual delivery is capped at 16 calls and the workflow at ten minutes.
+   It rejects redirects and logs only validated aggregate fields. Authenticated
+   `GET /internal/reminders` checks successful morning execution, provider failures,
+   current pending records and `lastBatchRemaining`, including unstaged backlog.
+   Afternoon registrations do not rewrite that historical count. A zero-question
+   account has no reminder to send; a successful zero-send cycle can be healthy.
+5. PostgreSQL owns the renewable job lease and unique per-device/day/session
+   delivery records. Retries back off, expired tokens are removed, and completed
+   reviews/opt-outs count as skips rather than provider failures. `SENT` means FCM
+   accepted the request, not that the phone displayed it. Data remains for 30 days.
+6. A crash after provider acceptance but before database acknowledgement can
+   produce an ambiguous retry. Stable IDs, Android tags/collapse keys and app
+   deduplication reduce duplicate presentation; do not promise exactly-once receipt.
+7. Verify automatic batch logs, protected audit results and actual phone receipt
+   with real due questions. Complete the remaining acceptance in CURRENT-RELEASE.md.
+   Backend `REMINDER-OPERATIONS.md` covers setup, response inspection and rollback.
+8. Preserve the existing Free plans and paid-usage limits. These bounded morning
+   wake pulses are not an all-day keep-alive or a guarantee of production uptime.
 
 ## 7. Flutter Web and Netlify
 
@@ -172,7 +198,7 @@ Auth rate limiting is 30 POST attempts per 10 minutes per resolved address in on
 
 ## 8. Android release and App Links
 
-1. Installed SDK includes API 36; Flutter config targets/compiles API 36. App ID is `app.ankidsa.mobile`, version from `pubspec.yaml` (`1.0.0+1` initially). Increment build number for updates. A shared AnkiDSA logo now supplies launcher, adaptive, themed, notification, web, and extension icons. Release resource shrinking/R8 is enabled; Firebase/Flutter supply consumer rules. Release HTTP cleartext is forbidden; debug retains local emulator access.
+1. Installed SDK includes API 36; Flutter config targets/compiles API 36. App ID is `app.ankidsa.mobile`, version from `pubspec.yaml` (`1.0.1+2` currently; `1.0.0+1` retained as the earlier release). Increment build number for updates. A shared AnkiDSA logo now supplies launcher, adaptive, themed, notification, web, and extension icons. Release resource shrinking/R8 is enabled; Firebase/Flutter supply consumer rules. Release HTTP cleartext is forbidden; debug retains local emulator access.
 2. A release key was created locally by `scripts/create-signing-key.ps1` under `%USERPROFILE%\.ankidsa\signing-beta`, outside both repositories, with a restricted ACL. The private directory contains `ankidsa-release.p12` and `password.txt`; alias is `ankidsa`. **Back up both securely before distributing any build. Do not regenerate the key for updates.** On a fresh machine only, run that script once or configure an existing key through the environment. No signing secrets go in GitHub PR jobs.
 3. Create ignored `config/production.local.json` from the example with `APP_ENV=production`, exact API and Netlify origins and all four public Firebase values. For study-only phone testing before Firebase setup, use `config/study-beta.example.json`, which explicitly sets `PUSH_NOTIFICATIONS_ENABLED=false`; push stays unavailable in that build. Do not include `VALIDATION_ONLY=true` in an actual beta build. In PowerShell with Flutter and Java 21 on PATH:
 
@@ -213,12 +239,12 @@ Before inviting real users, verify:
 - Problem create/read/edit/delete confirmation, conflicting edit, repeated review UUID, stats after reload, new detail/schedule/settings screens at phone/tablet/desktop widths and large text; keyboard focus and screen-reader labels.
 - Real backend sleep: leave it idle >15 minutes, then sign in/load/mutate. Readiness retries should explain the wait; mutating requests must not be blindly replayed after ambiguous failure. Test network errors and manual refresh to resolve saved-state uncertainty.
 - FCM opt-in/denial, token rotation, foreground banner, background/killed-app push, tap to queue, logout/re-login, invalid token removal, two phones, duplicate reminder triggers and transient FCM failure. Never expose real device tokens in bug reports.
-- Manual scheduler run in its window, database aggregate status, no unauthenticated access, delayed GHA run recovery; Firebase provider setup is configured, but actual phone and scheduled delivery still need verification. Brevo setup and one full actual reset/inbox check passed; a second actual recovery-message check remains.
+- Automatic morning dispatch, database aggregate status, dedicated-secret audit access and delayed read-only GHA audit; direct FCM phone receipt/queue opening and opt-out/re-enable passed on the prior APK. The new APK still requires physical-device acceptance. Backend scheduled delivery, due-question selection, daily deduplication/no sends after completion, and sign-out/account switching still need live verification. Brevo setup, one complete controlled reset flow, and actual reset-message inbox receipts for two mailboxes passed; the owner's study password was not changed.
 - Current real LeetCode pages, extension CSP/host permissions, private ZIP upgrade; Android release certificate/signature, ARM64 launch, app links, Android 13+ permission.
 
 Rollback order:
 
-1. Pause the GitHub reminder workflow and disable Render auto deploy. Record current app revisions, release artifacts and row counts. Do not delete data or stop the database.
+1. Apply backend `ops/supabase-reminder-wake-rollback.sql` to unschedule only the AnkiDSA wake/history jobs. Disable `NOTIFICATIONS_ENABLED` and redeploy if delivery must stop while the backend is awake. Pause the GitHub audit during intentional maintenance and disable Render auto deploy. Record current app revisions, release artifacts and row counts. Do not delete data or stop the database.
 2. Netlify **Deploys → previous successful production deploy → Publish deploy**. If unavailable, upload the retained previous web artifact. Distribute the previous reviewed extension ZIP. Keep the previous Android APK with the same signing key; downgrade may require a higher versionCode rebuild, never automatic uninstall/data deletion.
 3. Render **Deploys → previous successful deployment → Rollback**, or manually deploy a known-good commit. Check /ready and core flows. Keep new additive V5 tables; do not run down migrations or Flyway clean/repair. A pre-hardening backend lacks session revocation and hosted protections, so prefer a forward fix or restrict access rather than restoring insecure behavior silently.
 4. Database rollback is **not** automatic restore. Existing/new study writes must be preserved. Stop writes only if required, make another external backup, compare changes and design a reviewed forward repair. Restore the earlier dump only to a separate recovery database until the owner explicitly approves reconciliation. Do not overwrite the live Supabase project.
@@ -230,4 +256,4 @@ Always-on Render, larger PostgreSQL, backups/HA, custom domain/authenticated ema
 
 ## Exact deployment order
 
-Review both repository changes → verify existing database/backup/permissions → allocate provider URLs → configure Firebase and verified Brevo sender → run approved additive migrations → configure/deploy Render → verify API/security → rebuild/upload Netlify → rebuild/sign Android and publish public App Links file → package/load extension → configure/manual-test reminder workflow → run live smoke checklist → invite private beta users. Render and the database are verified live. Remaining provider configuration and end-to-end checks are recorded in [CURRENT-RELEASE.md](CURRENT-RELEASE.md).
+Review both repository changes → verify existing database/backup/permissions → allocate provider URLs → configure Firebase and verified Brevo sender → run approved additive migrations → configure/deploy Render → verify API/security → rebuild/upload Netlify → rebuild/sign Android and publish public App Links file → package/load extension → configure/verify Supabase wakes and the read-only audit → run live smoke checklist → complete the user trial → prepare later store publication. Render and the database are verified live. Remaining provider configuration and end-to-end checks are recorded in [CURRENT-RELEASE.md](CURRENT-RELEASE.md).
