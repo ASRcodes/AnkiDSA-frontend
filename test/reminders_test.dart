@@ -1,6 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
+import 'package:ankidsa/constants.dart';
+import 'package:ankidsa/screens/home_screen.dart';
+import 'package:ankidsa/screens/settings_screen.dart';
+import 'package:ankidsa/services/study_store.dart';
+import 'package:ankidsa/theme.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -40,6 +47,22 @@ class FakePush extends PushClient {
   Future<void> close() async {
     await changes.close();
     await opens.close();
+  }
+}
+
+class ManualRetryTimer implements Timer {
+  final void Function(Timer) callback;
+  ManualRetryTimer(this.callback);
+  @override
+  bool isActive = true;
+  @override
+  int tick = 0;
+  @override
+  void cancel() => isActive = false;
+  void fire() {
+    if (!isActive) return;
+    tick++;
+    callback(this);
   }
 }
 
@@ -117,6 +140,190 @@ void main() {
     expect(jsonDecode(requests.last.body)['token'], 'phone-one');
   });
 
+  test(
+      'initial availability failure preserves consent and retries automatically',
+      () async {
+    final prefs = await SharedPreferences.getInstance();
+    final consentKey = 'ankidsa_reminders_${AppConstants.baseUrl}_1';
+    await prefs.setBool(consentKey, true);
+    intercept = (request) async {
+      if (request.url.path == '/api/auth/options') {
+        throw const ApiException('Server unavailable.', 503);
+      }
+    };
+    late ManualRetryTimer retry;
+    runZoned(() => reminders.attach(auth), zoneSpecification: ZoneSpecification(
+        createPeriodicTimer: (self, parent, zone, duration, callback) {
+      expect(duration, const Duration(minutes: 2));
+      return retry = ManualRetryTimer(callback);
+    }));
+    await reminders.settled;
+    expect(reminders.supported, true);
+    expect(reminders.available, false);
+    expect(reminders.enabled, true);
+    expect(reminders.registered, false);
+    expect(prefs.getBool(consentKey), true);
+    expect(requests.where((r) => r.method == 'PUT'), isEmpty);
+
+    intercept = null;
+    retry.fire();
+    await reminders.settled;
+    expect(reminders.available, true);
+    expect(reminders.enabled, true);
+    expect(reminders.registered, true);
+    expect(reminders.error, isNull);
+    expect(push.prompts, 0);
+    expect(requests.where((r) => r.method == 'PUT').length, 1);
+  });
+
+  test(
+      'failed registration keeps consent without claiming registration, then retries',
+      () async {
+    reminders.attach(auth);
+    await reminders.settled;
+    intercept = (request) async {
+      if (request.method == 'PUT') {
+        throw const ApiException('Server unavailable.', 503);
+      }
+    };
+    await reminders.setEnabled(true);
+    expect(reminders.enabled, true);
+    expect(reminders.registered, false);
+    expect(reminders.error, contains('could not be confirmed'));
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getBool('ankidsa_reminders_${AppConstants.baseUrl}_1'), true);
+    expect(
+        prefs.getString('ankidsa_push_device_${AppConstants.baseUrl}'), isNull);
+
+    intercept = null;
+    await reminders.refresh();
+    expect(reminders.registered, true);
+    expect(reminders.error, isNull);
+    expect(prefs.getString('ankidsa_push_device_${AppConstants.baseUrl}'),
+        'phone-one');
+    expect(push.prompts, 1);
+  });
+
+  test('saved consent can be disabled while availability cannot be checked',
+      () async {
+    final prefs = await SharedPreferences.getInstance();
+    final consentKey = 'ankidsa_reminders_${AppConstants.baseUrl}_1';
+    await prefs.setBool(consentKey, true);
+    intercept = (request) async {
+      if (request.url.path == '/api/auth/options') {
+        throw const ApiException('Server unavailable.', 503);
+      }
+    };
+    reminders.attach(auth);
+    await reminders.settled;
+    await reminders.setEnabled(false);
+    expect(reminders.enabled, false);
+    expect(reminders.registered, false);
+    expect(prefs.getBool(consentKey), false);
+    expect(push.revoked, 1);
+  });
+
+  for (final size in [const Size(360, 800), const Size(1100, 800)]) {
+    testWidgets(
+        'reminder controls remain reachable after startup failure at $size',
+        (tester) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      intercept = (request) async {
+        if (request.url.path == '/api/auth/options') {
+          throw const ApiException('Server unavailable.', 503);
+        }
+      };
+      await tester.runAsync(() async {
+        reminders.attach(auth);
+        await reminders.settled;
+      });
+      final store = StudyStore();
+      await tester.pumpWidget(MultiProvider(
+        providers: [
+          ChangeNotifierProvider<AuthService>.value(value: auth),
+          ChangeNotifierProvider<ReminderService>.value(value: reminders),
+          ChangeNotifierProvider<StudyStore>.value(value: store),
+        ],
+        child: MaterialApp(theme: appTheme(), home: const HomeScreen()),
+      ));
+      await tester.pumpAndSettle();
+      if (size.width < 900) {
+        await tester.tap(find.byTooltip('Account'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Reminders'));
+      } else {
+        await tester.ensureVisible(find.text('Reminders'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Reminders'));
+      }
+      await tester.pumpAndSettle();
+      expect(find.text('Retry connection'), findsOneWidget);
+      expect(
+          tester.widget<SwitchListTile>(find.byType(SwitchListTile)).onChanged,
+          isNull);
+      intercept = null;
+      await tester.runAsync(() async {
+        await tester.tap(find.text('Retry connection'));
+        await reminders.settled;
+      });
+      await tester.pumpAndSettle();
+      expect(reminders.available, true);
+      expect(
+          tester.widget<SwitchListTile>(find.byType(SwitchListTile)).onChanged,
+          isNotNull);
+      expect(find.text('Daily reminders are off for this device.'),
+          findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+      store.dispose();
+    });
+  }
+
+  testWidgets('settings shows failed registration and a working retry action',
+      (tester) async {
+    await tester.runAsync(() async {
+      reminders.attach(auth);
+      await reminders.settled;
+    });
+    intercept = (request) async {
+      if (request.method == 'PUT') {
+        throw const ApiException('Server unavailable.', 503);
+      }
+    };
+    await tester.runAsync(() => reminders.setEnabled(true));
+    await tester.pumpWidget(MultiProvider(
+      providers: [
+        ChangeNotifierProvider<AuthService>.value(value: auth),
+        ChangeNotifierProvider<ReminderService>.value(value: reminders),
+      ],
+      child: MaterialApp(
+          theme: appTheme(), home: const Scaffold(body: SettingsScreen())),
+    ));
+    await tester.pumpAndSettle();
+    expect(
+        find.text(
+            'Your preference is saved. Device registration has not been confirmed.'),
+        findsOneWidget);
+    expect(find.text('Daily reminders are on for this device.'), findsNothing);
+    await tester.ensureVisible(find.text('Retry connection'));
+    await tester.pumpAndSettle();
+    intercept = null;
+    await tester.runAsync(() async {
+      await tester.tap(find.text('Retry connection'));
+      await reminders.settled;
+    });
+    await tester.pumpAndSettle();
+    expect(
+        find.text(
+            'This device is registered for reminders when questions are due.'),
+        findsOneWidget);
+    expect(find.text('Retry connection'), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   test('backend activation becomes available without changing account consent',
       () async {
     dailyReminders = false;
@@ -171,6 +378,7 @@ void main() {
     await enabling;
     await reminders.settled;
     expect(reminders.enabled, false);
+    expect(reminders.registered, false);
     final deletes = requests.where((r) => r.method == 'DELETE');
     expect(deletes, isNotEmpty);
     expect(
@@ -185,6 +393,7 @@ void main() {
     expect(push.revoked, 1);
     await reminders.setEnabled(true);
     expect(requests.last.headers['Authorization'], 'Bearer session-two');
+    expect(reminders.registered, true);
   });
 
   test('a reminder opens the queue only while the account has opted in',
@@ -205,6 +414,7 @@ void main() {
     push.opens.add(null);
     await Future<void>.delayed(Duration.zero);
     expect(opened, 1);
+    expect(reminders.registered, false);
     await subscription.cancel();
   });
 }

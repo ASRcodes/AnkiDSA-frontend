@@ -18,7 +18,8 @@ class ReminderService extends ChangeNotifier {
         apiFactory = apiFactory ?? ((token) => ApiService(token: token)),
         preferences = preferences ?? SharedPreferences.getInstance;
 
-  bool available = false, enabled = false, busy = false;
+  bool available = false, enabled = false, registered = false, busy = false;
+  bool get supported => push.configured;
   String? error, _session;
   int? _userId;
   int _generation = 0;
@@ -54,9 +55,15 @@ class ReminderService extends ChangeNotifier {
     _userId = auth.userId;
     final generation = ++_generation;
     final session = _session, userId = _userId;
-    available = enabled = busy = false;
+    available = enabled = registered = busy = false;
     error = null;
+    _retry?.cancel();
+    _retry = null;
     if (!push.configured) return;
+    if (session != null && userId != null) {
+      // Retry setup even when the first availability check cannot reach the API.
+      _retry = Timer.periodic(const Duration(minutes: 2), (_) => refresh());
+    }
     unawaited(_enqueue(() async {
       try {
         final prefs = await preferences();
@@ -78,17 +85,20 @@ class ReminderService extends ChangeNotifier {
 
   Future<void> _loadSettings(int generation, String session, int userId) async {
     final api = apiFactory(session);
+    busy = true;
     try {
-      final options = await api.request('/api/auth/options');
-      if (!_current(generation)) return;
-      available = options['dailyReminders'] == true;
       final prefs = await preferences();
       if (!_current(generation)) return;
       enabled = prefs.getBool(_preferenceKey(userId)) ?? false;
+      _changed();
+      final options = await api.request('/api/auth/options');
+      if (!_current(generation)) return;
+      available = options['dailyReminders'] == true;
       error = null;
       if (available && enabled) {
         await _sync(generation, session);
       } else {
+        registered = false;
         final oldDevice = prefs.getString(_deviceKey);
         if (oldDevice != null) {
           try {
@@ -100,17 +110,25 @@ class ReminderService extends ChangeNotifier {
       }
     } catch (_) {
       if (_current(generation)) {
-        error = 'Reminders could not connect. Try again when you are online.';
+        registered = false;
+        error = 'Reminders could not connect. Retry when you are online.';
       }
     } finally {
       api.dispose();
-      if (_current(generation)) _changed();
+      if (_current(generation)) {
+        busy = false;
+        _changed();
+      }
     }
   }
 
   Future<void> setEnabled(bool value) {
     final generation = _generation, session = _session, userId = _userId;
-    if (!available || session == null || userId == null || busy) {
+    if (!supported ||
+        (value && !available) ||
+        session == null ||
+        userId == null ||
+        busy) {
       return Future.value();
     }
     busy = true;
@@ -123,7 +141,7 @@ class ReminderService extends ChangeNotifier {
         if (value) {
           if (!await push.permission(request: true)) {
             if (_current(generation)) {
-              enabled = false;
+              enabled = registered = false;
               error =
                   'Notifications are blocked. Allow them in your phone settings, then try again.';
             }
@@ -131,10 +149,11 @@ class ReminderService extends ChangeNotifier {
           }
           if (!_current(generation)) return;
           await prefs.setBool(_preferenceKey(userId), true);
+          if (!_current(generation)) return;
           enabled = true;
           await _sync(generation, session);
         } else {
-          enabled = false;
+          enabled = registered = false;
           await prefs.setBool(_preferenceKey(userId), false);
           final device = prefs.getString(_deviceKey);
           try {
@@ -145,8 +164,9 @@ class ReminderService extends ChangeNotifier {
         }
       } catch (_) {
         if (_current(generation)) {
+          registered = false;
           error = value
-              ? 'Reminders will retry when you reopen the app with a connection.'
+              ? 'Your preference is saved, but device registration could not be confirmed. Retry when you are online.'
               : 'Your preference is saved. Reconnect and open the app to finish turning reminders off.';
         }
       } finally {
@@ -160,6 +180,7 @@ class ReminderService extends ChangeNotifier {
 
   Future<void> _sync(int generation, String session, {String? token}) async {
     if (!_current(generation) || !enabled) return;
+    registered = false;
     if (!await push.permission()) {
       if (!_current(generation)) return;
       final prefs = await preferences();
@@ -178,7 +199,6 @@ class ReminderService extends ChangeNotifier {
     _messages ??= push.foregroundReminders.listen((_) {
       if (_session != null && enabled) _foreground.add(null);
     });
-    _retry ??= Timer.periodic(const Duration(minutes: 2), (_) => refresh());
     final device = token ?? await push.token();
     if (device == null) {
       error =
@@ -198,6 +218,8 @@ class ReminderService extends ChangeNotifier {
       }
       await prefs.setString(_deviceKey, device);
       if (old != null && old != device) await _remove(session, old);
+      if (!_current(generation)) return;
+      registered = true;
       error = null;
       if (await push.initialQueueOpen() && _current(generation)) {
         _queueOpens.add(null);
@@ -229,7 +251,7 @@ class ReminderService extends ChangeNotifier {
     if (!push.configured ||
         session == null ||
         userId == null ||
-        (available && !enabled) ||
+        (available && !enabled && error == null) ||
         _refreshQueued ||
         _disposed) {
       return Future.value();
@@ -238,18 +260,24 @@ class ReminderService extends ChangeNotifier {
     return _enqueue(() async {
       try {
         if (!_current(generation)) return;
-        if (!available) {
+        busy = true;
+        _changed();
+        if (!available || !enabled) {
           await _loadSettings(generation, session, userId);
         } else {
           await _sync(generation, session, token: token);
         }
       } catch (_) {
         if (_current(generation)) {
+          registered = false;
           error = 'Reminders could not connect. We will retry shortly.';
         }
       } finally {
         _refreshQueued = false;
-        if (_current(generation)) _changed();
+        if (_current(generation)) {
+          busy = false;
+          _changed();
+        }
       }
     });
   }

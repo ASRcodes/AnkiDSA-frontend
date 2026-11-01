@@ -32,16 +32,16 @@ class SettingsScreen extends StatelessWidget {
             'Your collection and review history belong to this account. Sign in on another device to pick up where you left off.'),
       ]),
       _section('Reminders', Icons.notifications_outlined, [
-        Text(reminders?.available == true
-            ? (reminders!.enabled
-                ? 'Daily reminders are on for this device.'
-                : 'Make a little room for recall each morning.')
-            : 'Daily push reminders are available in the configured Android app. Your review queue is always available here.'),
+        if (reminders?.supported == true)
+          const ReminderStatus()
+        else
+          const Text(
+              'Daily push reminders are available in the configured Android app. Your review queue is always available here.'),
         const SizedBox(height: 12),
         const Text(
             'Morning reminders are best effort during the beta. Delivery time may vary; open your queue any time to see what is due.',
             style: TextStyle(color: AppColors.muted, fontSize: 12)),
-        if (reminders?.available == true) ...[
+        if (reminders?.supported == true) ...[
           const SizedBox(height: 16),
           OutlinedButton(
               onPressed: () => showReminderSettings(context),

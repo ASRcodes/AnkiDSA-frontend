@@ -117,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         ? showReminderSettings(context)
                         : context.read<AuthService>().logout(),
                     itemBuilder: (_) => [
-                          if (reminders?.available == true)
+                          if (reminders?.supported == true)
                             const PopupMenuItem(
                                 value: 'reminders', child: Text('Reminders')),
                           const PopupMenuItem(
@@ -179,7 +179,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                             height: 1.7))
                                   ])),
                           const SizedBox(height: 24),
-                          if (reminders?.available == true)
+                          if (reminders?.supported == true)
                             TextButton.icon(
                                 onPressed: () => showReminderSettings(context),
                                 icon: const Icon(Icons.notifications_outlined),
